@@ -1,0 +1,84 @@
+# ---------------------------------------------------------------------------
+# UtilityHub
+# ---------------------------------------------------------------------------
+
+# --- Credenciales. Nunca, por ningun motivo. -------------------------------
+# El Learner Lab entrega credenciales temporales con aws_session_token.
+# GitHub detecta claves de AWS y las revoca, pero la exposicion ya ocurrio.
+.env
+.env.*
+*.env
+credentials
+credentials.csv
+aws_credentials
+.aws/
+*.pem
+*.ppk
+*.key
+*.p12
+*.pfx
+config.local.*
+secrets.*
+rootkey.csv
+
+# --- Datos generados -------------------------------------------------------
+# Los CSV los reproduce el generador con la misma semilla. Versionar el
+# script, no su salida. Si necesitas fijar un conjunto para la sustentacion,
+# quita la exclusion de casos_esperados.csv y comitea ese archivo solo.
+tools/generador-datos/salida/
+salida/
+*.csv
+!docs/**/*.csv
+
+# --- Python (generador y Lambda) -------------------------------------------
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+
+# --- Node (interfaz de consulta, si la haces en JS) ------------------------
+node_modules/
+npm-debug.log*
+yarn-error.log*
+package-lock.json.bak
+dist/
+build/
+
+# --- Paquetes de despliegue ------------------------------------------------
+# El zip de la Lambda se reconstruye; no es fuente.
+*.zip
+lambda_package/
+layer/
+
+# --- Documentacion ---------------------------------------------------------
+# Archivos temporales que Word y LibreOffice dejan al abrir un documento.
+~$*
+.~lock.*#
+*.tmp
+
+# Respaldos automaticos de Draw.io. El .drawio y el .xml si se versionan.
+*.drawio.bkp
+*.drawio.dtmp
+
+# --- Sistema operativo -----------------------------------------------------
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+._*
+
+# --- Editores --------------------------------------------------------------
+.vscode/
+!.vscode/settings.json
+.idea/
+*.swp
+*.swo
+
+# --- Registros -------------------------------------------------------------
+*.log
+logs/
