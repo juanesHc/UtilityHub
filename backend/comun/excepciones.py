@@ -1,0 +1,103 @@
+class ErrorUtilityHub(Exception):
+    pass
+
+
+class ConfiguracionIncompleta(ErrorUtilityHub):
+    def __init__(self, variables_faltantes: tuple[str, ...]) -> None:
+        super().__init__("Faltan variables de entorno: " + ", ".join(variables_faltantes))
+        self.variables_faltantes: tuple[str, ...] = variables_faltantes
+
+
+class ConfiguracionInvalida(ErrorUtilityHub):
+    def __init__(self, nombre_variable: str, valor_recibido: str) -> None:
+        super().__init__(f"La variable de entorno {nombre_variable} tiene un valor invalido: '{valor_recibido}'")
+        self.nombre_variable: str = nombre_variable
+        self.valor_recibido: str = valor_recibido
+
+
+class ErrorConexionBaseDatos(ErrorUtilityHub):
+    def __init__(self, descripcion_error: str) -> None:
+        super().__init__(f"No fue posible conectarse a la base de datos: {descripcion_error}")
+        self.descripcion_error: str = descripcion_error
+
+
+class PeriodoInvalido(ErrorUtilityHub):
+    def __init__(self, texto_periodo: str) -> None:
+        super().__init__(f"El periodo '{texto_periodo}' no tiene el formato AAAA-MM o el mes no existe")
+        self.texto_periodo: str = texto_periodo
+
+
+class ArchivoInvalido(ErrorUtilityHub):
+    pass
+
+
+class NombreArchivoInvalido(ArchivoInvalido):
+    def __init__(self, nombre_archivo: str) -> None:
+        super().__init__(f"El nombre '{nombre_archivo}' no sigue el formato lecturas_T<torre>_<AAAA-MM>.csv")
+        self.nombre_archivo: str = nombre_archivo
+
+
+class CodificacionNoSoportada(ArchivoInvalido):
+    def __init__(self) -> None:
+        super().__init__("El archivo no esta codificado en UTF-8")
+
+
+class ArchivoVacio(ArchivoInvalido):
+    def __init__(self) -> None:
+        super().__init__("El archivo no tiene encabezado ni filas")
+
+
+class EncabezadoInvalido(ArchivoInvalido):
+    def __init__(self, columnas_recibidas: tuple[str, ...], columnas_esperadas: tuple[str, ...]) -> None:
+        super().__init__(
+            "El encabezado no coincide. Esperado: " + ",".join(columnas_esperadas)
+            + " | Recibido: " + ",".join(columnas_recibidas)
+        )
+        self.columnas_recibidas: tuple[str, ...] = columnas_recibidas
+        self.columnas_esperadas: tuple[str, ...] = columnas_esperadas
+
+
+class RangoDePeriodosInvalido(ErrorUtilityHub):
+    def __init__(self, periodo_desde: str, periodo_hasta: str) -> None:
+        super().__init__(f"El periodo desde {periodo_desde} es posterior al periodo hasta {periodo_hasta}")
+        self.periodo_desde: str = periodo_desde
+        self.periodo_hasta: str = periodo_hasta
+
+
+class CredencialesInvalidas(ErrorUtilityHub):
+    def __init__(self) -> None:
+        super().__init__("Usuario o clave incorrectos")
+
+
+class TokenInvalido(ErrorUtilityHub):
+    def __init__(self) -> None:
+        super().__init__("Token de acceso ausente, invalido o vencido")
+
+
+class LecturaInexistente(ErrorUtilityHub):
+    def __init__(self, id_lectura: int) -> None:
+        super().__init__(f"La lectura {id_lectura} no existe")
+        self.id_lectura: int = id_lectura
+
+
+class CargaInexistente(ErrorUtilityHub):
+    def __init__(self, id_carga: int) -> None:
+        super().__init__(f"La carga {id_carga} no existe")
+        self.id_carga: int = id_carga
+
+
+class TorreInexistente(ErrorUtilityHub):
+    def __init__(self, codigo_torre: str) -> None:
+        super().__init__(f"La torre '{codigo_torre}' no existe")
+        self.codigo_torre: str = codigo_torre
+
+
+class PeriodoAnteriorAlMasReciente(ErrorUtilityHub):
+    def __init__(self, codigo_torre: str, periodo_archivo: str, periodo_mas_reciente: str) -> None:
+        super().__init__(
+            f"La torre {codigo_torre} ya tiene lecturas del periodo {periodo_mas_reciente}; "
+            f"solo se admite cargar o reprocesar ese periodo o uno posterior, no {periodo_archivo}"
+        )
+        self.codigo_torre: str = codigo_torre
+        self.periodo_archivo: str = periodo_archivo
+        self.periodo_mas_reciente: str = periodo_mas_reciente
