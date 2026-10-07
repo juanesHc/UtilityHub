@@ -170,6 +170,17 @@ class Usuario:
     nombre_usuario: str
     hash_contrasena: str = field(repr=False)
     ultimo_acceso: datetime | None
+    intentos_fallidos: int
+    bloqueado_hasta: datetime | None
+    version_credenciales: int
+
+
+@dataclass(frozen=True)
+class UsuarioRegistrado:
+    id_usuario: int
+    nombre_usuario: str
+    fecha_creacion: datetime
+    nombre_usuario_creador: str | None
 
 
 @dataclass(frozen=True)
@@ -266,3 +277,13 @@ class RechazoRegistrado:
     periodo: str | None
     motivo_rechazo: MotivoRechazo
     valor_recibido: str | None
+
+
+@dataclass(frozen=True)
+class UsuarioListado:
+    id_usuario: int
+    nombre_usuario: str
+    fecha_creacion: datetime | None
+    nombre_usuario_creador: str | None
+    ultimo_acceso: datetime | None
+    bloqueado_hasta: datetime | None

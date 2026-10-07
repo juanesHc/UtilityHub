@@ -1,0 +1,70 @@
+.encabezado-panel {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 22px var(--margen-lateral);
+  border-bottom: 1px solid rgba(242, 241, 236, .1);
+}
+
+.encabezado-panel__navegacion {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 28px;
+  font-size: 15px;
+}
+
+.encabezado-panel__enlace {
+  color: var(--text-2);
+  text-decoration: none;
+}
+
+.encabezado-panel__enlace:hover,
+.encabezado-panel__enlace[aria-current='page'] {
+  color: var(--text);
+}
+
+.encabezado-panel__usuario {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 14px;
+}
+
+.encabezado-panel__identidad {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-2);
+}
+
+.encabezado-panel__avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #1F262C;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.encabezado-panel__salir {
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(242, 241, 236, .25);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.encabezado-panel__salir:hover {
+  border-color: var(--agua);
+  color: var(--agua);
+}

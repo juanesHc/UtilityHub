@@ -1,16 +1,14 @@
 from collections.abc import Callable
 
-from pymysql.connections import Connection
-from pymysql.cursors import Cursor
+from comun.conexion import Conexion, Cursor
 
 
 def ejecutar_en_transaccion[Resultado](
-    abrir_conexion: Callable[[], Connection],
+    abrir_conexion: Callable[[], Conexion],
     operacion: Callable[[Cursor], Resultado],
 ) -> Resultado:
     conexion = abrir_conexion()
     try:
-        conexion.begin()
         with conexion.cursor() as cursor:
             resultado = operacion(cursor)
         conexion.commit()

@@ -1,10 +1,8 @@
 from collections.abc import Callable
 from functools import partial
 
-from pymysql.connections import Connection
-from pymysql.cursors import Cursor
-
 from comun import repositorio
+from comun.conexion import Conexion as Connection, Cursor
 from comun.excepciones import CargaInexistente, LecturaInexistente
 from comun.modelos import (
     DetalleLecturaExplicada,

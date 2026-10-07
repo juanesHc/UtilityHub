@@ -85,7 +85,7 @@ class ValidadorFilas:
                 fila_cruda=fila_cruda,
                 motivo_rechazo=MotivoRechazo.CAMPO_OBLIGATORIO_FALTANTE,
                 valor_recibido=None,
-                detalle_rechazo="campos vacios: " + ", ".join(campos_faltantes),
+                detalle_rechazo="campos vacíos: " + ", ".join(campos_faltantes),
             )
 
         if tripleta_de_la_fila(fila_cruda) in tripletas_repetidas:
@@ -95,7 +95,7 @@ class ValidadorFilas:
                 valor_recibido=fila_cruda.lectura_acumulada,
                 detalle_rechazo=(
                     f"apartamento {fila_cruda.apartamento}, servicio {fila_cruda.servicio} y periodo "
-                    f"{fila_cruda.periodo} aparecen mas de una vez en el archivo"
+                    f"{fila_cruda.periodo} aparecen más de una vez en el archivo"
                 ),
             )
 
@@ -131,7 +131,7 @@ class ValidadorFilas:
                 valor_recibido=fila_cruda.lectura_acumulada,
                 detalle_rechazo=(
                     f"debe ser mayor o igual a 0, menor que {LECTURA_ACUMULADA_MAXIMA_EXCLUSIVA} "
-                    f"y con maximo 3 decimales; valor recibido: {fila_cruda.lectura_acumulada}"
+                    f"y con máximo 3 decimales; valor recibido: {fila_cruda.lectura_acumulada}"
                 ),
             )
 

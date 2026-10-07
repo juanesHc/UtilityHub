@@ -1,0 +1,251 @@
+@keyframes login-desvanecer-hacia-arriba {
+  to {
+    opacity: 0;
+    transform: translateY(-24px);
+  }
+}
+
+.login-ascenso-1 {
+  animation: ascender .9s var(--suave) .15s both;
+}
+
+.login-ascenso-2 {
+  animation: ascender .9s var(--suave) .3s both;
+}
+
+.login-ascenso-3 {
+  animation: ascender .9s var(--suave) .5s both;
+}
+
+.login {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+}
+
+.login__fondo {
+  position: absolute;
+  inset: 0;
+}
+
+.login__medio {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.login__degradado {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(11, 13, 15, .9) 0%, rgba(11, 13, 15, .55) 50%, rgba(11, 13, 15, .15) 100%);
+}
+
+.login__encabezado {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 28px var(--margen-lateral);
+}
+
+.login__lema {
+  font-size: 14px;
+  color: #E2E3E0;
+}
+
+.login__principal {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 48px;
+  padding: 24px var(--margen-lateral) 48px;
+}
+
+.login__principal--saliendo {
+  animation: login-desvanecer-hacia-arriba .6s ease forwards;
+}
+
+.login__presentacion {
+  flex: 999 1 520px;
+  min-width: 0;
+}
+
+.login__etiqueta {
+  margin: 0 0 20px;
+  color: var(--agua);
+}
+
+.login__titular {
+  margin: 0;
+  font-family: var(--fuente-titulos);
+  font-weight: 700;
+  font-size: clamp(48px, 7.4vw, 112px);
+  line-height: .95;
+  letter-spacing: -.035em;
+}
+
+.login__titular > span {
+  display: block;
+}
+
+.login__titular-luz {
+  color: var(--luz);
+}
+
+.login__descripcion {
+  margin: 28px 0 0;
+  max-width: 460px;
+  font-size: 18px;
+  line-height: 1.5;
+  color: #E2E3E0;
+}
+
+.login__tarjeta {
+  flex: 1 1 360px;
+  max-width: 420px;
+  box-sizing: border-box;
+  padding: 36px;
+  background: rgba(14, 17, 20, .72);
+  border: 1px solid rgba(242, 241, 236, .16);
+  border-radius: 20px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  animation: aparecer 1s ease .6s both;
+}
+
+.login__titulo-tarjeta {
+  margin: 0;
+  font-family: var(--fuente-titulos);
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -.02em;
+}
+
+.login-aviso {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.login-aviso--error {
+  background: rgba(255, 122, 89, .12);
+  border: 1px solid rgba(255, 122, 89, .4);
+  color: #FFB4A1;
+}
+
+.login-aviso--bloqueo {
+  background: rgba(245, 184, 61, .12);
+  border: 1px solid rgba(245, 184, 61, .4);
+  color: #F8D48A;
+}
+
+.login-aviso--sesion {
+  background: rgba(92, 200, 240, .1);
+  border: 1px solid rgba(92, 200, 240, .35);
+  color: #A9E2F7;
+}
+
+.login__campo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.login__campo label {
+  font-size: 13px;
+  color: #D2D4D2;
+}
+
+.login__entrada {
+  height: 48px;
+  padding: 0 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(242, 241, 236, .22);
+  background: rgba(242, 241, 236, .05);
+  color: var(--text);
+  font: inherit;
+  font-size: 16px;
+}
+
+.login__entrada::placeholder {
+  color: #8E959A;
+}
+
+.login__entrada:focus,
+.login__entrada:focus-visible {
+  outline: none;
+  border-color: var(--agua);
+  background: rgba(92, 200, 240, .06);
+}
+
+.login__boton {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  height: 52px;
+  margin-top: 4px;
+  border: none;
+  border-radius: 999px;
+  background: var(--text);
+  color: var(--bg);
+  font: inherit;
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.login__boton::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--agua);
+  opacity: 0;
+  transition: opacity .25s;
+}
+
+.login__boton:hover::before {
+  opacity: 1;
+}
+
+.login__boton:disabled {
+  cursor: progress;
+  opacity: .85;
+}
+
+.login__pie {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 28px;
+  padding: 0 var(--margen-lateral) 32px;
+  font-family: var(--fuente-mono);
+  font-size: 12px;
+  letter-spacing: .08em;
+  color: var(--text-2);
+}
+
+.login__leyenda {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+

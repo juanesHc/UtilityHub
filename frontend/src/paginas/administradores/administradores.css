@@ -1,0 +1,419 @@
+@keyframes administradores-ascender {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.administradores-ascenso-1 {
+  animation: administradores-ascender .8s var(--suave) .1s both;
+}
+
+.administradores-ascenso-2 {
+  animation: administradores-ascender .8s var(--suave) .25s both;
+}
+
+.administradores-heroe {
+  position: relative;
+  overflow: hidden;
+  min-height: 400px;
+  display: flex;
+  align-items: flex-end;
+}
+
+.administradores-heroe__fondo {
+  position: absolute;
+  inset: 0;
+}
+
+.administradores-heroe__foto {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 70%;
+}
+
+.administradores-heroe__degradado {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(0deg, rgba(11, 13, 15, 1) 0%, rgba(11, 13, 15, .72) 45%, rgba(11, 13, 15, .3) 100%),
+    linear-gradient(90deg, rgba(11, 13, 15, .55) 0%, rgba(11, 13, 15, 0) 60%);
+}
+
+.administradores-heroe__contenido {
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0 var(--margen-lateral) 40px;
+}
+
+.administradores-heroe__etiqueta {
+  margin: 0 0 16px;
+  color: var(--agua);
+}
+
+.administradores-heroe__titular {
+  margin: 0;
+  font-family: var(--fuente-titulos);
+  font-weight: 700;
+  font-size: clamp(44px, 6vw, 96px);
+  line-height: .96;
+  letter-spacing: -.035em;
+}
+
+.administradores-heroe__descripcion {
+  margin: 20px 0 0;
+  max-width: 520px;
+  font-size: 18px;
+  line-height: 1.5;
+  color: var(--text-2);
+}
+
+.administradores-cuerpo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 48px;
+  padding: 48px var(--margen-lateral) 96px;
+}
+
+.administradores-columna-formulario {
+  flex: 1 1 420px;
+  max-width: 560px;
+  min-width: 0;
+}
+
+.administradores-formulario,
+.administradores-exito {
+  box-sizing: border-box;
+  padding: 32px;
+  border-radius: 20px;
+  background: #101418;
+  border: 1px solid rgba(242, 241, 236, .12);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.administradores-formulario__titulo {
+  margin: 0;
+  font-family: var(--fuente-titulos);
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -.02em;
+}
+
+.administradores-aviso {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: rgba(255, 122, 89, .12);
+  border: 1px solid rgba(255, 122, 89, .4);
+  color: #FFB4A1;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.administradores-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.administradores-campo label {
+  font-size: 13px;
+  color: #D2D4D2;
+}
+
+.administradores-campo__cabecera {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.administradores-entrada {
+  flex: 1;
+  min-width: 0;
+  height: 48px;
+  padding: 0 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(242, 241, 236, .22);
+  background: rgba(242, 241, 236, .05);
+  color: var(--text);
+  font: inherit;
+  font-size: 16px;
+}
+
+.administradores-entrada[type='text'] {
+  font-family: var(--fuente-mono);
+  font-size: 15px;
+}
+
+.administradores-entrada::placeholder {
+  color: #8E959A;
+  font-family: var(--fuente-texto);
+}
+
+.administradores-entrada:focus,
+.administradores-entrada:focus-visible {
+  outline: none;
+  border-color: var(--agua);
+  background: rgba(92, 200, 240, .06);
+}
+
+.administradores-entrada[aria-invalid='true'] {
+  border-color: rgba(255, 122, 89, .7);
+}
+
+.administradores-entrada-con-accion {
+  display: flex;
+  gap: 8px;
+}
+
+.administradores-boton-icono,
+.administradores-boton-copiar {
+  flex: none;
+  height: 48px;
+  padding: 0 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(242, 241, 236, .22);
+  background: transparent;
+  color: var(--text-2);
+  font: inherit;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.administradores-boton-icono {
+  width: 48px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.administradores-boton-icono:hover,
+.administradores-boton-copiar:hover {
+  border-color: var(--text);
+  color: var(--text);
+}
+
+.administradores-boton-enlace {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--agua);
+  font: inherit;
+  font-size: 13px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.administradores-ayuda {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-3);
+}
+
+.administradores-reglas {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--text-3);
+}
+
+.administradores-regla {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.administradores-regla__marca {
+  flex: none;
+  width: 16px;
+  text-align: center;
+  font-family: var(--fuente-mono);
+}
+
+.administradores-regla--cumplida {
+  color: #9FE3BC;
+}
+
+.administradores-regla--incumplida {
+  color: #FFB4A1;
+}
+
+.administradores-boton-principal {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 52px;
+  border: none;
+  border-radius: 999px;
+  background: var(--text);
+  color: var(--bg);
+  font: inherit;
+  font-weight: 600;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.administradores-boton-principal::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--agua);
+  opacity: 0;
+  transition: opacity .25s;
+}
+
+.administradores-boton-principal:hover::before {
+  opacity: 1;
+}
+
+.administradores-boton-principal:disabled {
+  cursor: progress;
+  opacity: .85;
+}
+
+.administradores-exito {
+  border-color: rgba(127, 214, 164, .35);
+  gap: 14px;
+}
+
+.administradores-exito__etiqueta {
+  color: #9FE3BC;
+}
+
+.administradores-exito__nombre {
+  margin: 0;
+  font-family: var(--fuente-mono);
+  font-weight: 500;
+  font-size: clamp(24px, 3vw, 34px);
+  overflow-wrap: anywhere;
+}
+
+.administradores-exito__detalle {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--text-2);
+}
+
+.administradores-exito__detalle strong {
+  color: var(--text);
+}
+
+.administradores-exito .administradores-boton-principal {
+  margin-top: 10px;
+}
+
+.administradores-lista {
+  flex: 1 1 320px;
+  max-width: 560px;
+  min-width: 0;
+}
+
+.administradores-lista__cabecera {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin-bottom: 16px;
+}
+
+.administradores-lista__titulo {
+  margin: 0;
+  font-family: var(--fuente-titulos);
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -.02em;
+}
+
+.administradores-lista__conteo,
+.administradores-lista__cargando {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-2);
+}
+
+.administradores-lista__error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+}
+
+.administradores-lista__filas {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid rgba(242, 241, 236, .14);
+}
+
+.administradores-lista__fila {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 0;
+  border-bottom: 1px solid rgba(242, 241, 236, .1);
+}
+
+.administradores-lista__datos {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.administradores-lista__nombre {
+  font-family: var(--fuente-mono);
+  font-size: 17px;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.administradores-lista__actual {
+  font-family: var(--fuente-texto);
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--agua);
+}
+
+.administradores-lista__detalle {
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--text-2);
+}
+
+.administradores-lista__estado-cuenta {
+  flex: none;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(127, 214, 164, .12);
+  color: #9FE3BC;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.administradores-lista__estado-cuenta--bloqueada {
+  background: rgba(255, 122, 89, .15);
+  color: #FFB4A1;
+}

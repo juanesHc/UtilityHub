@@ -1,0 +1,40 @@
+.paginacion {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  margin-top: 24px;
+}
+
+.paginacion__boton {
+  min-width: 44px;
+  height: 44px;
+  padding: 0 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(242, 241, 236, .2);
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+
+.paginacion__boton:hover:not(:disabled) {
+  border-color: var(--text);
+}
+
+.paginacion__boton[aria-current='page'] {
+  background: var(--text);
+  color: var(--bg);
+  border-color: var(--text);
+}
+
+.paginacion__boton:disabled {
+  opacity: .35;
+  cursor: default;
+}
+
+.paginacion__separador {
+  padding: 0 6px;
+  color: var(--text-3);
+}

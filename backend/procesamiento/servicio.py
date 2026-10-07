@@ -1,10 +1,8 @@
 from collections.abc import Callable
 from datetime import datetime
 
-from pymysql.connections import Connection
-from pymysql.cursors import Cursor
-
 from comun import repositorio
+from comun.conexion import Conexion as Connection, Cursor
 from comun.excepciones import PeriodoAnteriorAlMasReciente, TorreInexistente
 from comun.modelos import EstadoCarga, FilaCruda, IdentificacionArchivo, ResultadoProcesamiento
 from comun.reloj import obtener_fecha_hora_actual_utc
@@ -28,7 +26,6 @@ class ServicioProcesamientoLecturas:
 
         conexion = self.abrir_conexion()
         try:
-            conexion.begin()
             with conexion.cursor() as cursor:
                 resultado = self.procesar_dentro_de_transaccion(
                     cursor,

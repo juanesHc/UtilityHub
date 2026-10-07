@@ -1,0 +1,37 @@
+.aviso-configuracion {
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding: 48px var(--margen-lateral);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 20px;
+  max-width: 760px;
+}
+
+.aviso-configuracion__etiqueta {
+  margin-top: 40px;
+  color: var(--luz);
+}
+
+.aviso-configuracion__titulo {
+  margin: 0;
+  font-family: var(--fuente-titulos);
+  font-weight: 700;
+  font-size: clamp(40px, 6vw, 80px);
+  line-height: .98;
+  letter-spacing: -.035em;
+}
+
+.aviso-configuracion__texto {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.6;
+  color: var(--text-2);
+}
+
+.aviso-configuracion__texto code {
+  font-family: var(--fuente-mono);
+  font-size: 15px;
+  color: var(--text);
+}

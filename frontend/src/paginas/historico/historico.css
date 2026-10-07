@@ -1,0 +1,348 @@
+@keyframes historico-ascender {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes historico-fila-entra {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.historico-ascenso-1 {
+  animation: historico-ascender .8s var(--suave) .1s both;
+}
+
+.historico-ascenso-2 {
+  animation: historico-ascender .8s var(--suave) .25s both;
+}
+
+.historico-heroe {
+  position: relative;
+  overflow: hidden;
+  min-height: 460px;
+  display: flex;
+  align-items: flex-end;
+  margin-bottom: 32px;
+}
+
+.historico-heroe__fondo {
+  position: absolute;
+  inset: 0;
+}
+
+.historico-heroe__foto {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 60% 45%;
+}
+
+.historico-heroe__degradado {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(0deg, rgba(11, 13, 15, 1) 0%, rgba(11, 13, 15, .7) 45%, rgba(11, 13, 15, .25) 100%),
+    linear-gradient(90deg, rgba(11, 13, 15, .55) 0%, rgba(11, 13, 15, 0) 60%);
+}
+
+.historico-heroe__contenido {
+  position: relative;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0 var(--margen-lateral) 40px;
+}
+
+.historico-heroe__etiqueta {
+  margin: 0 0 16px;
+  color: var(--agua);
+}
+
+.historico-heroe__titular {
+  margin: 0;
+  font-family: var(--fuente-titulos);
+  font-weight: 700;
+  font-size: clamp(44px, 6vw, 96px);
+  line-height: .96;
+  letter-spacing: -.035em;
+}
+
+.historico-seccion-filtros {
+  padding: 0 var(--margen-lateral);
+}
+
+.historico-filtros {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 16px;
+  align-items: end;
+  padding: 24px;
+  border-radius: 18px;
+  background: #101418;
+  border: 1px solid rgba(242, 241, 236, .1);
+}
+
+.historico-campo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.historico-campo label {
+  font-size: 13px;
+  color: var(--text-2);
+}
+
+.historico-control {
+  height: 46px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(242, 241, 236, .2);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: 15px;
+}
+
+.historico-control::placeholder {
+  color: #8E959A;
+}
+
+.historico-control:focus,
+.historico-control:focus-visible {
+  outline: none;
+  border-color: var(--agua);
+}
+
+.historico-control::-webkit-calendar-picker-indicator {
+  filter: invert(.85);
+  cursor: pointer;
+}
+
+.historico-interruptor {
+  height: 46px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 6px;
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font: inherit;
+  font-size: 15px;
+  cursor: pointer;
+  justify-self: start;
+}
+
+.historico-interruptor__pista {
+  position: relative;
+  flex: none;
+  width: 46px;
+  height: 26px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(242, 241, 236, .2);
+}
+
+.historico-interruptor__relleno {
+  position: absolute;
+  inset: 0;
+  background: var(--anomalia);
+  opacity: 0;
+  transition: opacity .3s;
+}
+
+.historico-interruptor__perilla {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--text);
+  transition: transform .3s var(--suave);
+}
+
+.historico-interruptor[aria-pressed='true'] .historico-interruptor__relleno {
+  opacity: 1;
+}
+
+.historico-interruptor[aria-pressed='true'] .historico-interruptor__perilla {
+  transform: translateX(20px);
+}
+
+.historico-seccion-resultados {
+  padding: 32px var(--margen-lateral) 96px;
+}
+
+.historico-resumen {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  font-size: 14px;
+  color: var(--text-2);
+  scroll-margin-top: 24px;
+}
+
+.historico-resumen strong {
+  color: var(--text);
+}
+
+.historico-tabla-contenedor {
+  overflow-x: auto;
+  border-radius: 16px;
+  border: 1px solid rgba(242, 241, 236, .1);
+  transition: opacity .2s;
+}
+
+.historico-tabla-contenedor--cargando {
+  opacity: .55;
+}
+
+.historico-tabla {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 15px;
+}
+
+.historico-tabla th {
+  padding: 12px 14px;
+  text-align: left;
+  font-weight: 500;
+  font-size: 12px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--text-3);
+  border-bottom: 1px solid rgba(242, 241, 236, .18);
+  white-space: nowrap;
+}
+
+.historico-tabla th.historico-celda-numero {
+  text-align: right;
+}
+
+.historico-fila {
+  cursor: pointer;
+  animation: historico-fila-entra .5s ease both;
+}
+
+.historico-fila:hover {
+  background: rgba(242, 241, 236, .04);
+}
+
+.historico-fila td {
+  padding: 16px 14px;
+  border-bottom: 1px solid rgba(242, 241, 236, .08);
+  white-space: nowrap;
+}
+
+.historico-fila__apartamento {
+  font-weight: 600;
+}
+
+.historico-servicio {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.historico-celda-numero {
+  text-align: right;
+  font-family: var(--fuente-mono);
+}
+
+.historico-celda-numero--secundaria {
+  color: var(--text-2);
+}
+
+.historico-sin-dato {
+  color: var(--text-3);
+  border-bottom: 1px dotted var(--text-3);
+  cursor: help;
+}
+
+.historico-pastilla-anomalia {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(255, 122, 89, .15);
+  color: #FFB4A1;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.historico-estado {
+  font-size: 13px;
+  color: var(--text-3);
+}
+
+.historico-vacio {
+  padding: 40px 14px;
+  text-align: center;
+  color: var(--text-2);
+}
+
+.historico-nota {
+  margin: 14px 0 0;
+  font-size: 13px;
+  color: var(--text-3);
+}
+
+.historico-aviso {
+  margin: 0 0 16px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: rgba(245, 184, 61, .12);
+  border: 1px solid rgba(245, 184, 61, .4);
+  color: #F8D48A;
+  font-size: 14px;
+}
+
+.historico-aviso--error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 20px;
+  background: rgba(255, 122, 89, .1);
+  border-color: rgba(255, 122, 89, .4);
+  color: #FFB4A1;
+}
+
+.historico-boton-secundario {
+  padding: 8px 18px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.historico-boton-enlace {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--agua);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}

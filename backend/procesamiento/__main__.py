@@ -30,12 +30,12 @@ def imprimir_resultado(resultado: ResultadoProcesamiento) -> None:
 
     for fila_rechazada in resultado.filas_rechazadas:
         print(
-            f"  linea {fila_rechazada.fila_cruda.numero_linea}: "
+            f"  línea {fila_rechazada.fila_cruda.numero_linea}: "
             f"{fila_rechazada.motivo_rechazo.value} ({fila_rechazada.detalle_rechazo})"
         )
 
     lecturas_anomalas = [lectura for lectura in resultado.lecturas_aceptadas if lectura.es_anomalo]
-    print(f"Consumos anomalos: {len(lecturas_anomalas)}")
+    print(f"Consumos anómalos: {len(lecturas_anomalas)}")
     for lectura_anomala in lecturas_anomalas:
         lectura_validada = lectura_anomala.lectura_validada
         print(

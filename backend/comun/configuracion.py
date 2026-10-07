@@ -10,7 +10,7 @@ VARIABLE_USUARIO: str = "UTILITYHUB_DB_USUARIO"
 VARIABLE_CLAVE: str = "UTILITYHUB_DB_CLAVE"
 VARIABLE_NOMBRE_BASE_DATOS: str = "UTILITYHUB_DB_NOMBRE"
 
-PUERTO_MYSQL_POR_DEFECTO: int = 3306
+PUERTO_POSTGRESQL_POR_DEFECTO: int = 5432
 
 
 @dataclass(frozen=True)
@@ -40,7 +40,7 @@ def cargar_configuracion_desde_entorno() -> ConfiguracionBaseDatos:
 def leer_puerto_desde_entorno() -> int:
     texto_puerto = os.environ.get(VARIABLE_PUERTO)
     if texto_puerto is None or texto_puerto.strip() == "":
-        return PUERTO_MYSQL_POR_DEFECTO
+        return PUERTO_POSTGRESQL_POR_DEFECTO
     if not texto_puerto.strip().isdigit():
         raise ConfiguracionInvalida(VARIABLE_PUERTO, texto_puerto)
     return int(texto_puerto.strip())

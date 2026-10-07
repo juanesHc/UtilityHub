@@ -2,6 +2,7 @@ from fastapi import Request, status
 from fastapi.responses import JSONResponse
 
 from api.esquemas import (
+    AdministradorRespuesta,
     CargaRespuesta,
     DetalleLecturaRespuesta,
     LecturaHistoricoRespuesta,
@@ -10,17 +11,23 @@ from api.esquemas import (
     ServicioRespuesta,
     TokenAccesoRespuesta,
     TorreRespuesta,
+    UsuarioRegistradoRespuesta,
 )
 from api.servicio_autenticacion import TokenEmitido
+from api.servicio_usuarios import AdministradorListado
 from comun.excepciones import (
     CargaInexistente,
+    ClaveInsegura,
     CredencialesInvalidas,
+    CuentaBloqueada,
     ErrorConexionBaseDatos,
     ErrorUtilityHub,
     LecturaInexistente,
+    NombreUsuarioInvalido,
     PeriodoInvalido,
     RangoDePeriodosInvalido,
     TokenInvalido,
+    UsuarioYaExiste,
 )
 from comun.modelos import (
     DetalleLecturaExplicada,
@@ -30,6 +37,7 @@ from comun.modelos import (
     ResumenCarga,
     Servicio,
     Torre,
+    UsuarioRegistrado,
 )
 
 
@@ -37,6 +45,10 @@ CODIGO_HTTP_ENTIDAD_NO_PROCESABLE: int = 422
 CODIGO_HTTP_POR_EXCEPCION: dict[type[ErrorUtilityHub], int] = {
     CredencialesInvalidas: status.HTTP_401_UNAUTHORIZED,
     TokenInvalido: status.HTTP_401_UNAUTHORIZED,
+    CuentaBloqueada: status.HTTP_429_TOO_MANY_REQUESTS,
+    UsuarioYaExiste: status.HTTP_409_CONFLICT,
+    NombreUsuarioInvalido: CODIGO_HTTP_ENTIDAD_NO_PROCESABLE,
+    ClaveInsegura: CODIGO_HTTP_ENTIDAD_NO_PROCESABLE,
     LecturaInexistente: status.HTTP_404_NOT_FOUND,
     CargaInexistente: status.HTTP_404_NOT_FOUND,
     PeriodoInvalido: CODIGO_HTTP_ENTIDAD_NO_PROCESABLE,
@@ -56,8 +68,35 @@ def traducir_error_de_dominio(peticion: Request, error: Exception) -> JSONRespon
         status.HTTP_500_INTERNAL_SERVER_ERROR,
     )
     mensaje = str(error) if codigo_http != status.HTTP_500_INTERNAL_SERVER_ERROR else MENSAJE_ERROR_INTERNO
-    encabezados = {"WWW-Authenticate": "Bearer"} if codigo_http == status.HTTP_401_UNAUTHORIZED else None
-    return JSONResponse(status_code=codigo_http, content={"detail": mensaje}, headers=encabezados)
+    return JSONResponse(status_code=codigo_http, content={"detail": mensaje}, headers=construir_encabezados_de_error(error, codigo_http))
+
+
+def construir_encabezados_de_error(error: Exception, codigo_http: int) -> dict[str, str] | None:
+    if codigo_http == status.HTTP_401_UNAUTHORIZED:
+        return {"WWW-Authenticate": "Bearer"}
+    if isinstance(error, CuentaBloqueada):
+        return {"Retry-After": str(error.segundos_restantes)}
+    return None
+
+
+def convertir_administrador_en_respuesta(administrador: AdministradorListado) -> AdministradorRespuesta:
+    return AdministradorRespuesta(
+        id_usuario=administrador.id_usuario,
+        nombre_usuario=administrador.nombre_usuario,
+        fecha_creacion=administrador.fecha_creacion,
+        creado_por=administrador.nombre_usuario_creador,
+        ultimo_acceso=administrador.ultimo_acceso,
+        esta_bloqueado=administrador.esta_bloqueado,
+    )
+
+
+def convertir_usuario_registrado_en_respuesta(usuario_registrado: UsuarioRegistrado) -> UsuarioRegistradoRespuesta:
+    return UsuarioRegistradoRespuesta(
+        id_usuario=usuario_registrado.id_usuario,
+        nombre_usuario=usuario_registrado.nombre_usuario,
+        fecha_creacion=usuario_registrado.fecha_creacion,
+        creado_por=usuario_registrado.nombre_usuario_creador,
+    )
 
 
 def convertir_token_en_respuesta(token_emitido: TokenEmitido) -> TokenAccesoRespuesta:

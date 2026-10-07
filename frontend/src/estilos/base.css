@@ -1,0 +1,163 @@
+:root {
+  --bg: #0B0D0F;
+  --surface: #12161A;
+  --surface-2: #0F1316;
+  --line: rgba(242, 241, 236, .12);
+  --text: #F2F1EC;
+  --text-2: #C9CCCB;
+  --text-3: #9AA1A6;
+  --agua: #5CC8F0;
+  --luz: #F5B83D;
+  --anomalia: #FF7A59;
+  --ok: #7FD6A4;
+  --suave: cubic-bezier(.2, .7, .2, 1);
+  --fuente-titulos: 'Archivo', sans-serif;
+  --fuente-texto: 'Instrument Sans', system-ui, sans-serif;
+  --fuente-mono: 'JetBrains Mono', monospace;
+  --margen-lateral: clamp(16px, 4vw, 56px);
+  color-scheme: dark;
+}
+
+html,
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--fuente-texto);
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: var(--text);
+}
+
+a:hover {
+  color: var(--agua);
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--agua);
+  outline-offset: 3px;
+}
+
+img,
+video {
+  display: block;
+}
+
+.visualmente-oculto {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.panel {
+  position: relative;
+  overflow: hidden;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.etiqueta-mono {
+  margin: 0;
+  font-family: var(--fuente-mono);
+  font-size: 13px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.logo {
+  font-family: var(--fuente-titulos);
+  font-weight: 700;
+  font-size: 20px;
+  letter-spacing: -.01em;
+  color: var(--text);
+  text-decoration: none;
+}
+
+.logo--grande {
+  font-size: 22px;
+}
+
+.logo__ligero {
+  font-weight: 300;
+}
+
+.punto {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.punto--agua {
+  background: var(--agua);
+}
+
+.punto--luz {
+  background: var(--luz);
+}
+
+@keyframes ascender {
+  from {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes acercamiento-lento {
+  from {
+    transform: scale(1.08);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes rellenar-horizontal {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.anim-acercamiento {
+  animation: acercamiento-lento 2.6s var(--suave) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: .001ms !important;
+    animation-delay: 0s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+    transition-delay: 0s !important;
+  }
+}

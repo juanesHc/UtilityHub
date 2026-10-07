@@ -1,22 +1,30 @@
-from datetime import date, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, Field, PlainSerializer
+from pydantic import AfterValidator, BaseModel, Field, PlainSerializer
 
 
+PATRON_TEXTO_SIN_CARACTER_NUL: str = r"^[^\x00]*$"
+
+
+def marcar_como_utc(fecha_hora: datetime) -> datetime:
+    return fecha_hora.replace(tzinfo=UTC) if fecha_hora.tzinfo is None else fecha_hora.astimezone(UTC)
+
+
+FechaHoraUtc = Annotated[datetime, AfterValidator(marcar_como_utc)]
 DecimalComoNumero = Annotated[Decimal, PlainSerializer(float, return_type=float, when_used="json")]
 
 
 class SolicitudInicioSesion(BaseModel):
-    usuario: str = Field(min_length=1, max_length=50)
-    clave: str = Field(min_length=1, max_length=128)
+    usuario: str = Field(min_length=1, max_length=50, pattern=PATRON_TEXTO_SIN_CARACTER_NUL)
+    clave: str = Field(min_length=1, max_length=128, pattern=PATRON_TEXTO_SIN_CARACTER_NUL)
 
 
 class TokenAccesoRespuesta(BaseModel):
     token_acceso: str
     tipo_token: Literal["bearer"]
-    expira_en: datetime
+    expira_en: FechaHoraUtc
     duracion_segundos: int
 
 
@@ -76,7 +84,7 @@ class CargaRespuesta(BaseModel):
     nombre_torre: str
     periodo: str
     nombre_archivo: str
-    fecha_procesamiento: datetime
+    fecha_procesamiento: FechaHoraUtc
     estado: str
     filas_aceptadas: int
     filas_rechazadas: int
@@ -96,6 +104,27 @@ class TorreRespuesta(BaseModel):
     id_torre: int
     codigo: str
     nombre: str
+
+
+class SolicitudRegistroUsuario(BaseModel):
+    usuario: str = Field(min_length=1, max_length=50, pattern=PATRON_TEXTO_SIN_CARACTER_NUL)
+    clave: str = Field(min_length=1, max_length=128, pattern=PATRON_TEXTO_SIN_CARACTER_NUL)
+
+
+class UsuarioRegistradoRespuesta(BaseModel):
+    id_usuario: int
+    nombre_usuario: str
+    fecha_creacion: FechaHoraUtc
+    creado_por: str | None
+
+
+class AdministradorRespuesta(BaseModel):
+    id_usuario: int
+    nombre_usuario: str
+    fecha_creacion: FechaHoraUtc | None
+    creado_por: str | None
+    ultimo_acceso: FechaHoraUtc | None
+    esta_bloqueado: bool
 
 
 class ServicioRespuesta(BaseModel):

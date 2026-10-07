@@ -10,7 +10,7 @@ class ConfiguracionIncompleta(ErrorUtilityHub):
 
 class ConfiguracionInvalida(ErrorUtilityHub):
     def __init__(self, nombre_variable: str, valor_recibido: str) -> None:
-        super().__init__(f"La variable de entorno {nombre_variable} tiene un valor invalido: '{valor_recibido}'")
+        super().__init__(f"La variable de entorno {nombre_variable} tiene un valor inválido: '{valor_recibido}'")
         self.nombre_variable: str = nombre_variable
         self.valor_recibido: str = valor_recibido
 
@@ -39,7 +39,7 @@ class NombreArchivoInvalido(ArchivoInvalido):
 
 class CodificacionNoSoportada(ArchivoInvalido):
     def __init__(self) -> None:
-        super().__init__("El archivo no esta codificado en UTF-8")
+        super().__init__("El archivo no está codificado en UTF-8")
 
 
 class ArchivoVacio(ArchivoInvalido):
@@ -69,9 +69,18 @@ class CredencialesInvalidas(ErrorUtilityHub):
         super().__init__("Usuario o clave incorrectos")
 
 
+class CuentaBloqueada(ErrorUtilityHub):
+    def __init__(self, segundos_restantes: int) -> None:
+        minutos_restantes = max(1, -(-segundos_restantes // 60))
+        super().__init__(
+            f"Cuenta bloqueada temporalmente por intentos fallidos; intente de nuevo en {minutos_restantes} minuto(s)"
+        )
+        self.segundos_restantes: int = segundos_restantes
+
+
 class TokenInvalido(ErrorUtilityHub):
     def __init__(self) -> None:
-        super().__init__("Token de acceso ausente, invalido o vencido")
+        super().__init__("Token de acceso ausente, inválido o vencido")
 
 
 class LecturaInexistente(ErrorUtilityHub):
@@ -101,3 +110,28 @@ class PeriodoAnteriorAlMasReciente(ErrorUtilityHub):
         self.codigo_torre: str = codigo_torre
         self.periodo_archivo: str = periodo_archivo
         self.periodo_mas_reciente: str = periodo_mas_reciente
+
+
+class NombreUsuarioInvalido(ErrorUtilityHub):
+    def __init__(self, nombre_usuario: str, descripcion_problema: str) -> None:
+        super().__init__(f"El nombre de usuario '{nombre_usuario}' no es válido: {descripcion_problema}")
+        self.nombre_usuario: str = nombre_usuario
+        self.descripcion_problema: str = descripcion_problema
+
+
+class ClaveInsegura(ErrorUtilityHub):
+    def __init__(self, descripcion_problema: str) -> None:
+        super().__init__(f"La clave no es aceptable: {descripcion_problema}")
+        self.descripcion_problema: str = descripcion_problema
+
+
+class UsuarioYaExiste(ErrorUtilityHub):
+    def __init__(self, nombre_usuario: str) -> None:
+        super().__init__(f"Ya existe un usuario '{nombre_usuario}' (sin distinguir mayúsculas)")
+        self.nombre_usuario: str = nombre_usuario
+
+
+class UsuarioInexistente(ErrorUtilityHub):
+    def __init__(self, nombre_usuario: str) -> None:
+        super().__init__(f"El usuario '{nombre_usuario}' no existe")
+        self.nombre_usuario: str = nombre_usuario

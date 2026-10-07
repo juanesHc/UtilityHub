@@ -1,8 +1,7 @@
 from datetime import datetime
 from typing import Any
 
-from pymysql.cursors import Cursor
-
+from comun.conexion import Cursor
 from comun.modelos import (
     Apartamento,
     CargaRegistrada,
@@ -20,16 +19,21 @@ from comun.modelos import (
     SolicitudPagina,
     Torre,
     Usuario,
+    UsuarioListado,
 )
 
 
 ESTADOS_CON_LECTURAS: tuple[EstadoCarga, ...] = (EstadoCarga.PROCESADA_COMPLETA, EstadoCarga.PROCESADA_PARCIAL)
 LONGITUD_MAXIMA_TEXTO_RECHAZO: int = 255
+CARACTER_NUL: str = "\x00"
+SUSTITUTO_DE_CARACTER_NUL: str = "�"
 
 SELECCION_LECTURA_CONSULTADA: str = (
-    "SELECT l.id_lectura, l.id_carga, t.codigo, t.nombre, a.numero, s.codigo, s.nombre, s.unidad_medida, "
-    "s.umbral_desviacion, l.periodo, l.lectura_acumulada, l.consumo_periodo, l.fecha_lectura, "
-    "l.promedio_referencia, l.es_anomalo "
+    "SELECT l.id_lectura AS id_lectura, l.id_carga AS id_carga, t.codigo AS codigo_torre, "
+    "t.nombre AS nombre_torre, a.numero AS numero_apartamento, s.codigo AS codigo_servicio, "
+    "s.nombre AS nombre_servicio, s.unidad_medida AS unidad_medida, s.umbral_desviacion AS umbral_desviacion, "
+    "l.periodo AS periodo, l.lectura_acumulada AS lectura_acumulada, l.consumo_periodo AS consumo_periodo, "
+    "l.fecha_lectura AS fecha_lectura, l.promedio_referencia AS promedio_referencia, l.es_anomalo AS es_anomalo "
 )
 ORIGEN_LECTURA_CONSULTADA: str = (
     "FROM lectura l "
@@ -47,7 +51,11 @@ def bloquear_torre_por_codigo(cursor: Cursor, codigo_torre: str) -> Torre | None
     fila_torre = cursor.fetchone()
     if fila_torre is None:
         return None
-    return Torre(id_torre=fila_torre[0], codigo=fila_torre[1], nombre=fila_torre[2])
+    return convertir_fila_en_torre(fila_torre)
+
+
+def convertir_fila_en_torre(fila_torre: dict[str, Any]) -> Torre:
+    return Torre(id_torre=fila_torre["id_torre"], codigo=fila_torre["codigo"], nombre=fila_torre["nombre"])
 
 
 def listar_apartamentos_de_torre(cursor: Cursor, id_torre: int) -> tuple[Apartamento, ...]:
@@ -56,7 +64,7 @@ def listar_apartamentos_de_torre(cursor: Cursor, id_torre: int) -> tuple[Apartam
         (id_torre,),
     )
     return tuple(
-        Apartamento(id_apartamento=fila[0], id_torre=fila[1], numero=fila[2])
+        Apartamento(id_apartamento=fila["id_apartamento"], id_torre=fila["id_torre"], numero=fila["numero"])
         for fila in cursor.fetchall()
     )
 
@@ -65,11 +73,11 @@ def listar_servicios(cursor: Cursor) -> tuple[Servicio, ...]:
     cursor.execute("SELECT id_servicio, codigo, nombre, unidad_medida, umbral_desviacion FROM servicio ORDER BY codigo")
     return tuple(
         Servicio(
-            id_servicio=fila[0],
-            codigo=fila[1],
-            nombre=fila[2],
-            unidad_medida=fila[3],
-            umbral_desviacion=fila[4],
+            id_servicio=fila["id_servicio"],
+            codigo=fila["codigo"],
+            nombre=fila["nombre"],
+            unidad_medida=fila["unidad_medida"],
+            umbral_desviacion=fila["umbral_desviacion"],
         )
         for fila in cursor.fetchall()
     )
@@ -77,13 +85,13 @@ def listar_servicios(cursor: Cursor) -> tuple[Servicio, ...]:
 
 def buscar_periodo_mas_reciente_con_lecturas(cursor: Cursor, id_torre: int) -> Periodo | None:
     cursor.execute(
-        "SELECT MAX(periodo) FROM carga WHERE id_torre = %s AND estado IN (%s, %s)",
+        "SELECT MAX(periodo) AS periodo_mas_reciente FROM carga WHERE id_torre = %s AND estado IN (%s, %s)",
         (id_torre, *(estado.value for estado in ESTADOS_CON_LECTURAS)),
     )
     fila_maximo = cursor.fetchone()
-    if fila_maximo is None or fila_maximo[0] is None:
+    if fila_maximo is None or fila_maximo["periodo_mas_reciente"] is None:
         return None
-    return Periodo.desde_texto(fila_maximo[0])
+    return Periodo.desde_texto(fila_maximo["periodo_mas_reciente"])
 
 
 def listar_cargas_vigentes_del_periodo(cursor: Cursor, id_torre: int, periodo: Periodo) -> tuple[CargaRegistrada, ...]:
@@ -96,20 +104,21 @@ def listar_cargas_vigentes_del_periodo(cursor: Cursor, id_torre: int, periodo: P
     return tuple(convertir_fila_en_carga(fila) for fila in cursor.fetchall())
 
 
-def convertir_fila_en_carga(fila_carga: tuple[Any, ...]) -> CargaRegistrada:
+def convertir_fila_en_carga(fila_carga: dict[str, Any]) -> CargaRegistrada:
     return CargaRegistrada(
-        id_carga=fila_carga[0],
-        id_torre=fila_carga[1],
-        nombre_archivo=fila_carga[2],
-        periodo=Periodo.desde_texto(fila_carga[3]),
-        fecha_procesamiento=fila_carga[4],
-        estado=EstadoCarga(fila_carga[5]),
+        id_carga=fila_carga["id_carga"],
+        id_torre=fila_carga["id_torre"],
+        nombre_archivo=fila_carga["nombre_archivo"],
+        periodo=Periodo.desde_texto(fila_carga["periodo"]),
+        fecha_procesamiento=fila_carga["fecha_procesamiento"],
+        estado=EstadoCarga(fila_carga["estado"]),
     )
 
 
 def listar_lecturas_anteriores_al_periodo(cursor: Cursor, id_torre: int, periodo: Periodo) -> tuple[LecturaHistorica, ...]:
     cursor.execute(
-        "SELECT l.id_apartamento, l.id_servicio, l.periodo, l.lectura_acumulada, l.consumo_periodo, l.es_anomalo "
+        "SELECT l.id_apartamento AS id_apartamento, l.id_servicio AS id_servicio, l.periodo AS periodo, "
+        "l.lectura_acumulada AS lectura_acumulada, l.consumo_periodo AS consumo_periodo, l.es_anomalo AS es_anomalo "
         "FROM lectura l JOIN apartamento a ON a.id_apartamento = l.id_apartamento "
         "WHERE a.id_torre = %s AND l.periodo < %s "
         "ORDER BY l.id_apartamento, l.id_servicio, l.periodo",
@@ -117,19 +126,20 @@ def listar_lecturas_anteriores_al_periodo(cursor: Cursor, id_torre: int, periodo
     )
     return tuple(
         LecturaHistorica(
-            id_apartamento=fila[0],
-            id_servicio=fila[1],
-            periodo=Periodo.desde_texto(fila[2]),
-            lectura_acumulada=fila[3],
-            consumo_periodo=fila[4],
-            es_anomalo=bool(fila[5]),
+            id_apartamento=fila["id_apartamento"],
+            id_servicio=fila["id_servicio"],
+            periodo=Periodo.desde_texto(fila["periodo"]),
+            lectura_acumulada=fila["lectura_acumulada"],
+            consumo_periodo=fila["consumo_periodo"],
+            es_anomalo=bool(fila["es_anomalo"]),
         )
         for fila in cursor.fetchall()
     )
 
 
 def eliminar_lecturas_de_carga(cursor: Cursor, id_carga: int) -> int:
-    return cursor.execute("DELETE FROM lectura WHERE id_carga = %s", (id_carga,))
+    cursor.execute("DELETE FROM lectura WHERE id_carga = %s", (id_carga,))
+    return cursor.rowcount
 
 
 def actualizar_estado_carga(cursor: Cursor, id_carga: int, estado_nuevo: EstadoCarga) -> None:
@@ -146,10 +156,10 @@ def insertar_carga(
 ) -> int:
     cursor.execute(
         "INSERT INTO carga (id_torre, nombre_archivo, periodo, fecha_procesamiento, estado) "
-        "VALUES (%s, %s, %s, %s, %s)",
+        "VALUES (%s, %s, %s, %s, %s) RETURNING id_carga",
         (id_torre, nombre_archivo, periodo.como_texto(), fecha_procesamiento, estado_carga.value),
     )
-    return cursor.lastrowid
+    return cursor.fetchone()["id_carga"]
 
 
 def insertar_lecturas(cursor: Cursor, id_carga: int, lecturas_evaluadas: tuple[LecturaEvaluada, ...]) -> None:
@@ -200,25 +210,25 @@ def insertar_rechazos(cursor: Cursor, id_carga: int, filas_rechazadas: tuple[Fil
 def recortar_texto_de_rechazo(texto_recibido: str | None) -> str | None:
     if texto_recibido is None or texto_recibido == "":
         return None
-    return texto_recibido[:LONGITUD_MAXIMA_TEXTO_RECHAZO]
+    return texto_recibido.replace(CARACTER_NUL, SUSTITUTO_DE_CARACTER_NUL)[:LONGITUD_MAXIMA_TEXTO_RECHAZO]
 
 
 def listar_torres(cursor: Cursor) -> tuple[Torre, ...]:
     cursor.execute("SELECT id_torre, codigo, nombre FROM torre ORDER BY codigo")
-    return tuple(Torre(id_torre=fila[0], codigo=fila[1], nombre=fila[2]) for fila in cursor.fetchall())
+    return tuple(convertir_fila_en_torre(fila) for fila in cursor.fetchall())
 
 
 def construir_condiciones_historico(filtros: FiltrosHistoricoLecturas) -> tuple[str, list[Any]]:
     condiciones: list[str] = []
     parametros: list[Any] = []
     if filtros.codigo_torre is not None:
-        condiciones.append("t.codigo = %s")
+        condiciones.append("t.codigo = UPPER(%s)")
         parametros.append(filtros.codigo_torre)
     if filtros.numero_apartamento is not None:
-        condiciones.append("a.numero = %s")
+        condiciones.append("UPPER(a.numero) = UPPER(%s)")
         parametros.append(filtros.numero_apartamento)
     if filtros.codigo_servicio is not None:
-        condiciones.append("s.codigo = %s")
+        condiciones.append("s.codigo = UPPER(%s)")
         parametros.append(filtros.codigo_servicio)
     if filtros.periodo_desde is not None:
         condiciones.append("l.periodo >= %s")
@@ -235,8 +245,8 @@ def construir_condiciones_historico(filtros: FiltrosHistoricoLecturas) -> tuple[
 
 def contar_historico_lecturas(cursor: Cursor, filtros: FiltrosHistoricoLecturas) -> int:
     clausula_where, parametros = construir_condiciones_historico(filtros)
-    cursor.execute("SELECT COUNT(*) " + ORIGEN_LECTURA_CONSULTADA + clausula_where, parametros)
-    return cursor.fetchone()[0]
+    cursor.execute("SELECT COUNT(*) AS total_resultados " + ORIGEN_LECTURA_CONSULTADA + clausula_where, parametros)
+    return cursor.fetchone()["total_resultados"]
 
 
 def listar_historico_lecturas(
@@ -247,7 +257,7 @@ def listar_historico_lecturas(
     clausula_where, parametros = construir_condiciones_historico(filtros)
     cursor.execute(
         SELECCION_LECTURA_CONSULTADA + ORIGEN_LECTURA_CONSULTADA + clausula_where
-        + "ORDER BY l.periodo DESC, t.codigo, a.numero, s.codigo LIMIT %s OFFSET %s",
+        + "ORDER BY l.periodo DESC, t.codigo, LENGTH(a.numero), a.numero, s.codigo LIMIT %s OFFSET %s",
         [*parametros, solicitud_pagina.tamano_pagina, solicitud_pagina.cantidad_a_omitir],
     )
     return tuple(convertir_fila_en_lectura_consultada(fila) for fila in cursor.fetchall())
@@ -264,52 +274,53 @@ def buscar_lectura_consultada(cursor: Cursor, id_lectura: int) -> LecturaConsult
     return convertir_fila_en_lectura_consultada(fila_lectura)
 
 
-def convertir_fila_en_lectura_consultada(fila_lectura: tuple[Any, ...]) -> LecturaConsultada:
+def convertir_fila_en_lectura_consultada(fila_lectura: dict[str, Any]) -> LecturaConsultada:
     return LecturaConsultada(
-        id_lectura=fila_lectura[0],
-        id_carga=fila_lectura[1],
-        codigo_torre=fila_lectura[2],
-        nombre_torre=fila_lectura[3],
-        numero_apartamento=fila_lectura[4],
-        codigo_servicio=fila_lectura[5],
-        nombre_servicio=fila_lectura[6],
-        unidad_medida=fila_lectura[7],
-        umbral_desviacion=fila_lectura[8],
-        periodo=Periodo.desde_texto(fila_lectura[9]),
-        lectura_acumulada=fila_lectura[10],
-        consumo_periodo=fila_lectura[11],
-        fecha_lectura=fila_lectura[12],
-        promedio_referencia=fila_lectura[13],
-        es_anomalo=bool(fila_lectura[14]),
+        id_lectura=fila_lectura["id_lectura"],
+        id_carga=fila_lectura["id_carga"],
+        codigo_torre=fila_lectura["codigo_torre"],
+        nombre_torre=fila_lectura["nombre_torre"],
+        numero_apartamento=fila_lectura["numero_apartamento"],
+        codigo_servicio=fila_lectura["codigo_servicio"],
+        nombre_servicio=fila_lectura["nombre_servicio"],
+        unidad_medida=fila_lectura["unidad_medida"],
+        umbral_desviacion=fila_lectura["umbral_desviacion"],
+        periodo=Periodo.desde_texto(fila_lectura["periodo"]),
+        lectura_acumulada=fila_lectura["lectura_acumulada"],
+        consumo_periodo=fila_lectura["consumo_periodo"],
+        fecha_lectura=fila_lectura["fecha_lectura"],
+        promedio_referencia=fila_lectura["promedio_referencia"],
+        es_anomalo=bool(fila_lectura["es_anomalo"]),
     )
 
 
 def listar_resumen_cargas(cursor: Cursor) -> tuple[ResumenCarga, ...]:
     cursor.execute(
-        "SELECT c.id_carga, t.codigo, t.nombre, c.periodo, c.nombre_archivo, c.fecha_procesamiento, c.estado, "
-        "(SELECT COUNT(*) FROM lectura l WHERE l.id_carga = c.id_carga), "
-        "(SELECT COUNT(*) FROM rechazo r WHERE r.id_carga = c.id_carga) "
+        "SELECT c.id_carga AS id_carga, t.codigo AS codigo_torre, t.nombre AS nombre_torre, c.periodo AS periodo, "
+        "c.nombre_archivo AS nombre_archivo, c.fecha_procesamiento AS fecha_procesamiento, c.estado AS estado, "
+        "(SELECT COUNT(*) FROM lectura l WHERE l.id_carga = c.id_carga) AS cantidad_lecturas_aceptadas, "
+        "(SELECT COUNT(*) FROM rechazo r WHERE r.id_carga = c.id_carga) AS cantidad_filas_rechazadas "
         "FROM carga c JOIN torre t ON t.id_torre = c.id_torre "
         "ORDER BY c.fecha_procesamiento DESC, c.id_carga DESC"
     )
     return tuple(
         ResumenCarga(
-            id_carga=fila[0],
-            codigo_torre=fila[1],
-            nombre_torre=fila[2],
-            periodo=Periodo.desde_texto(fila[3]),
-            nombre_archivo=fila[4],
-            fecha_procesamiento=fila[5],
-            estado=EstadoCarga(fila[6]),
-            cantidad_lecturas_aceptadas=fila[7],
-            cantidad_filas_rechazadas=fila[8],
+            id_carga=fila["id_carga"],
+            codigo_torre=fila["codigo_torre"],
+            nombre_torre=fila["nombre_torre"],
+            periodo=Periodo.desde_texto(fila["periodo"]),
+            nombre_archivo=fila["nombre_archivo"],
+            fecha_procesamiento=fila["fecha_procesamiento"],
+            estado=EstadoCarga(fila["estado"]),
+            cantidad_lecturas_aceptadas=fila["cantidad_lecturas_aceptadas"],
+            cantidad_filas_rechazadas=fila["cantidad_filas_rechazadas"],
         )
         for fila in cursor.fetchall()
     )
 
 
 def existe_carga(cursor: Cursor, id_carga: int) -> bool:
-    cursor.execute("SELECT 1 FROM carga WHERE id_carga = %s", (id_carga,))
+    cursor.execute("SELECT 1 AS existe FROM carga WHERE id_carga = %s", (id_carga,))
     return cursor.fetchone() is not None
 
 
@@ -321,37 +332,106 @@ def listar_rechazos_de_carga(cursor: Cursor, id_carga: int) -> tuple[RechazoRegi
     )
     return tuple(
         RechazoRegistrado(
-            id_rechazo=fila[0],
-            id_carga=fila[1],
-            numero_fila=fila[2],
-            apartamento=fila[3],
-            servicio=fila[4],
-            periodo=fila[5],
-            motivo_rechazo=MotivoRechazo(fila[6]),
-            valor_recibido=fila[7],
+            id_rechazo=fila["id_rechazo"],
+            id_carga=fila["id_carga"],
+            numero_fila=fila["numero_fila"],
+            apartamento=fila["apartamento"],
+            servicio=fila["servicio"],
+            periodo=fila["periodo"],
+            motivo_rechazo=MotivoRechazo(fila["motivo"]),
+            valor_recibido=fila["valor_recibido"],
         )
         for fila in cursor.fetchall()
     )
 
 
+SELECCION_USUARIO: str = (
+    "SELECT id_usuario, nombre_usuario, hash_contrasena, ultimo_acceso, intentos_fallidos, bloqueado_hasta, "
+    "version_credenciales FROM usuario WHERE LOWER(nombre_usuario) = LOWER(%s)"
+)
+
+
 def buscar_usuario_por_nombre(cursor: Cursor, nombre_usuario: str) -> Usuario | None:
-    cursor.execute(
-        "SELECT id_usuario, nombre_usuario, hash_contrasena, ultimo_acceso FROM usuario WHERE nombre_usuario = %s",
-        (nombre_usuario,),
-    )
+    cursor.execute(SELECCION_USUARIO, (nombre_usuario,))
     fila_usuario = cursor.fetchone()
-    if fila_usuario is None:
-        return None
+    return None if fila_usuario is None else convertir_fila_en_usuario(fila_usuario)
+
+
+def bloquear_usuario_por_nombre(cursor: Cursor, nombre_usuario: str) -> Usuario | None:
+    cursor.execute(SELECCION_USUARIO + " FOR UPDATE", (nombre_usuario,))
+    fila_usuario = cursor.fetchone()
+    return None if fila_usuario is None else convertir_fila_en_usuario(fila_usuario)
+
+
+def convertir_fila_en_usuario(fila_usuario: dict[str, Any]) -> Usuario:
     return Usuario(
-        id_usuario=fila_usuario[0],
-        nombre_usuario=fila_usuario[1],
-        hash_contrasena=fila_usuario[2],
-        ultimo_acceso=fila_usuario[3],
+        id_usuario=fila_usuario["id_usuario"],
+        nombre_usuario=fila_usuario["nombre_usuario"],
+        hash_contrasena=fila_usuario["hash_contrasena"],
+        ultimo_acceso=fila_usuario["ultimo_acceso"],
+        intentos_fallidos=fila_usuario["intentos_fallidos"],
+        bloqueado_hasta=fila_usuario["bloqueado_hasta"],
+        version_credenciales=fila_usuario["version_credenciales"],
     )
 
 
-def registrar_ultimo_acceso(cursor: Cursor, id_usuario: int, fecha_ultimo_acceso: datetime) -> None:
+def registrar_inicio_sesion_exitoso(cursor: Cursor, id_usuario: int, fecha_ultimo_acceso: datetime) -> None:
     cursor.execute(
-        "UPDATE usuario SET ultimo_acceso = %s WHERE id_usuario = %s",
+        "UPDATE usuario SET ultimo_acceso = %s, intentos_fallidos = 0, bloqueado_hasta = NULL WHERE id_usuario = %s",
         (fecha_ultimo_acceso, id_usuario),
+    )
+
+
+def registrar_intento_fallido(
+    cursor: Cursor,
+    id_usuario: int,
+    intentos_fallidos: int,
+    bloqueado_hasta: datetime | None,
+) -> None:
+    cursor.execute(
+        "UPDATE usuario SET intentos_fallidos = %s, bloqueado_hasta = %s WHERE id_usuario = %s",
+        (intentos_fallidos, bloqueado_hasta, id_usuario),
+    )
+
+
+def insertar_usuario(
+    cursor: Cursor,
+    nombre_usuario: str,
+    hash_contrasena: str,
+    fecha_creacion: datetime,
+    creado_por_id_usuario: int | None,
+) -> int:
+    cursor.execute(
+        "INSERT INTO usuario (nombre_usuario, hash_contrasena, fecha_creacion, creado_por_id_usuario) "
+        "VALUES (%s, %s, %s, %s) RETURNING id_usuario",
+        (nombre_usuario, hash_contrasena, fecha_creacion, creado_por_id_usuario),
+    )
+    return cursor.fetchone()["id_usuario"]
+
+
+def actualizar_clave_e_invalidar_sesiones(cursor: Cursor, id_usuario: int, hash_contrasena: str) -> None:
+    cursor.execute(
+        "UPDATE usuario SET hash_contrasena = %s, version_credenciales = version_credenciales + 1, "
+        "intentos_fallidos = 0, bloqueado_hasta = NULL WHERE id_usuario = %s",
+        (hash_contrasena, id_usuario),
+    )
+
+
+def listar_usuarios(cursor: Cursor) -> tuple[UsuarioListado, ...]:
+    cursor.execute(
+        "SELECT u.id_usuario AS id_usuario, u.nombre_usuario AS nombre_usuario, u.fecha_creacion AS fecha_creacion, "
+        "c.nombre_usuario AS nombre_usuario_creador, u.ultimo_acceso AS ultimo_acceso, u.bloqueado_hasta AS bloqueado_hasta "
+        "FROM usuario u LEFT JOIN usuario c ON c.id_usuario = u.creado_por_id_usuario "
+        "ORDER BY LOWER(u.nombre_usuario)"
+    )
+    return tuple(
+        UsuarioListado(
+            id_usuario=fila["id_usuario"],
+            nombre_usuario=fila["nombre_usuario"],
+            fecha_creacion=fila["fecha_creacion"],
+            nombre_usuario_creador=fila["nombre_usuario_creador"],
+            ultimo_acceso=fila["ultimo_acceso"],
+            bloqueado_hasta=fila["bloqueado_hasta"],
+        )
+        for fila in cursor.fetchall()
     )

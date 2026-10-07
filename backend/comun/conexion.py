@@ -1,20 +1,27 @@
-import pymysql
-from pymysql.connections import Connection
+import psycopg2
+from psycopg2.extensions import connection
+from psycopg2.extras import RealDictCursor
 
 from comun.configuracion import ConfiguracionBaseDatos
 from comun.excepciones import ErrorConexionBaseDatos
 
 
-def abrir_conexion(configuracion: ConfiguracionBaseDatos) -> Connection:
+Conexion = connection
+Cursor = RealDictCursor
+
+
+def abrir_conexion(configuracion: ConfiguracionBaseDatos) -> Conexion:
     try:
-        return pymysql.connect(
+        conexion = psycopg2.connect(
             host=configuracion.host,
             port=configuracion.puerto,
             user=configuracion.usuario,
             password=configuracion.clave,
-            database=configuracion.nombre_base_datos,
-            charset="utf8mb4",
-            autocommit=False,
+            dbname=configuracion.nombre_base_datos,
+            client_encoding="UTF8",
+            cursor_factory=RealDictCursor,
         )
-    except pymysql.MySQLError as error:
+    except psycopg2.Error as error:
         raise ErrorConexionBaseDatos(str(error)) from error
+    conexion.autocommit = False
+    return conexion

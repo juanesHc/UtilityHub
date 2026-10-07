@@ -1,0 +1,136 @@
+@keyframes nube-velo-entra {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes nube-velo-sale {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@keyframes nube-textura-entra {
+  from { opacity: 0; transform: scale(1.5); }
+  to { opacity: 1; transform: scale(1.15); }
+}
+
+@keyframes nube-textura-sale {
+  from { opacity: 1; transform: scale(1.15) translateY(0); }
+  to { opacity: 0; transform: scale(1) translateY(-14%); }
+}
+
+@keyframes nube-banda-primera-sube {
+  from { transform: translateY(0); }
+  to { transform: translateY(-125vh); }
+}
+
+@keyframes nube-banda-primera-sale {
+  from { transform: translateY(-125vh); opacity: 1; }
+  to { transform: translateY(-230vh); opacity: 0; }
+}
+
+@keyframes nube-banda-segunda-sube {
+  from { transform: translateY(0) scale(1.35, 1.35) scaleX(-1); }
+  to { transform: translateY(-105vh) scale(1.35, 1.35) scaleX(-1); }
+}
+
+@keyframes nube-banda-segunda-sale {
+  from { transform: translateY(-105vh) scale(1.35, 1.35) scaleX(-1); opacity: 1; }
+  to { transform: translateY(-250vh) scale(1.35, 1.35) scaleX(-1); opacity: 0; }
+}
+
+.nube-contenedor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 100vh;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 30;
+}
+
+.nube {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.nube__velo,
+.nube__textura {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+}
+
+.nube__velo {
+  background: radial-gradient(ellipse at 50% 55%, #E9EBEC 0%, #CDD1D3 45%, #A9AFB2 100%);
+}
+
+.nube__textura {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  mix-blend-mode: screen;
+  filter: contrast(1.15);
+}
+
+.nube__banda {
+  position: absolute;
+  left: -10%;
+  width: 120%;
+  top: 100%;
+  height: 90vh;
+  object-fit: cover;
+  mix-blend-mode: screen;
+  -webkit-mask-image: linear-gradient(to top, #000 55%, transparent 100%);
+  mask-image: linear-gradient(to top, #000 55%, transparent 100%);
+}
+
+.nube__banda--segunda {
+  height: 80vh;
+  opacity: .9;
+}
+
+.nube--cubriendo .nube__velo {
+  animation: nube-velo-entra .5s ease-in .75s forwards;
+}
+
+.nube--cubriendo .nube__textura {
+  animation: nube-textura-entra .75s cubic-bezier(.3, 0, .4, 1) .55s forwards;
+}
+
+.nube--cubriendo .nube__banda--primera {
+  animation: nube-banda-primera-sube 1.3s cubic-bezier(.5, 0, .3, 1) forwards;
+}
+
+.nube--cubriendo .nube__banda--segunda {
+  animation: nube-banda-segunda-sube 1.3s cubic-bezier(.5, 0, .3, 1) .1s forwards;
+}
+
+.nube--revelando .nube__velo {
+  opacity: 1;
+  animation: nube-velo-sale .7s ease-out .1s forwards;
+}
+
+.nube--revelando .nube__textura {
+  opacity: 1;
+  transform: scale(1.15);
+  animation: nube-textura-sale 1.2s cubic-bezier(.4, 0, .2, 1) .15s forwards;
+}
+
+.nube--revelando .nube__banda--primera {
+  transform: translateY(-125vh);
+  animation: nube-banda-primera-sale 1.3s cubic-bezier(.4, 0, .2, 1) forwards;
+}
+
+.nube--revelando .nube__banda--segunda {
+  transform: translateY(-105vh) scale(1.35, 1.35) scaleX(-1);
+  animation: nube-banda-segunda-sale 1.4s cubic-bezier(.4, 0, .2, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nube-contenedor {
+    display: none;
+  }
+}

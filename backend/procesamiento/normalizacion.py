@@ -29,6 +29,8 @@ PATRON_SEPARADOR_DE_RUTA: re.Pattern[str] = re.compile(r"[\\/]")
 
 
 def interpretar_nombre_archivo(nombre_archivo: str) -> IdentificacionArchivo:
+    if "\x00" in nombre_archivo:
+        raise NombreArchivoInvalido(nombre_archivo)
     nombre_sin_ruta = PATRON_SEPARADOR_DE_RUTA.split(nombre_archivo.strip())[-1]
     coincidencia = PATRON_NOMBRE_ARCHIVO.fullmatch(nombre_sin_ruta)
     if coincidencia is None:
