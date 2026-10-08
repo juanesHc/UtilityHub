@@ -10,23 +10,33 @@ from api.esquemas import (
     RechazoRespuesta,
     ServicioRespuesta,
     TokenAccesoRespuesta,
+    SubidaRespuesta,
     TorreRespuesta,
     UsuarioRegistradoRespuesta,
 )
 from api.servicio_autenticacion import TokenEmitido
 from api.servicio_usuarios import AdministradorListado
 from comun.excepciones import (
+    AlmacenNoConfigurado,
+    ArchivoDeCargaNoDisponible,
+    ArchivoDemasiadoGrande,
+    ArchivoInvalido,
     CargaInexistente,
     ClaveInsegura,
     CredencialesInvalidas,
     CuentaBloqueada,
     ErrorConexionBaseDatos,
     ErrorUtilityHub,
+    FirmaDeSubidaInvalida,
     LecturaInexistente,
     NombreUsuarioInvalido,
+    ObjetoInexistente,
+    PeriodoAnteriorAlMasReciente,
     PeriodoInvalido,
     RangoDePeriodosInvalido,
+    SubidaInexistente,
     TokenInvalido,
+    TorreInexistente,
     UsuarioYaExiste,
 )
 from comun.modelos import (
@@ -36,6 +46,7 @@ from comun.modelos import (
     RechazoRegistrado,
     ResumenCarga,
     Servicio,
+    SubidaRegistrada,
     Torre,
     UsuarioRegistrado,
 )
@@ -54,6 +65,15 @@ CODIGO_HTTP_POR_EXCEPCION: dict[type[ErrorUtilityHub], int] = {
     PeriodoInvalido: CODIGO_HTTP_ENTIDAD_NO_PROCESABLE,
     RangoDePeriodosInvalido: CODIGO_HTTP_ENTIDAD_NO_PROCESABLE,
     ErrorConexionBaseDatos: status.HTTP_503_SERVICE_UNAVAILABLE,
+    SubidaInexistente: status.HTTP_404_NOT_FOUND,
+    ArchivoInvalido: CODIGO_HTTP_ENTIDAD_NO_PROCESABLE,
+    TorreInexistente: CODIGO_HTTP_ENTIDAD_NO_PROCESABLE,
+    PeriodoAnteriorAlMasReciente: status.HTTP_409_CONFLICT,
+    FirmaDeSubidaInvalida: status.HTTP_403_FORBIDDEN,
+    ArchivoDemasiadoGrande: status.HTTP_413_CONTENT_TOO_LARGE,
+    AlmacenNoConfigurado: status.HTTP_503_SERVICE_UNAVAILABLE,
+    ArchivoDeCargaNoDisponible: status.HTTP_404_NOT_FOUND,
+    ObjetoInexistente: status.HTTP_404_NOT_FOUND,
 }
 MENSAJE_ERROR_INTERNO: str = "Error interno del servidor"
 
@@ -199,4 +219,15 @@ def convertir_servicio_en_respuesta(servicio: Servicio) -> ServicioRespuesta:
         nombre=servicio.nombre,
         unidad_medida=servicio.unidad_medida,
         umbral_desviacion=servicio.umbral_desviacion,
+    )
+
+def convertir_subida_en_respuesta(subida: SubidaRegistrada) -> SubidaRespuesta:
+    return SubidaRespuesta(
+        id_subida=subida.id_subida,
+        nombre_archivo=subida.nombre_archivo,
+        estado=subida.estado.value,
+        fecha_solicitud=subida.fecha_solicitud,
+        id_carga=subida.id_carga,
+        detalle_error=subida.detalle_error,
+        fecha_procesamiento=subida.fecha_procesamiento,
     )

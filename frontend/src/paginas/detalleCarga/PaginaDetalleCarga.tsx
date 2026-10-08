@@ -16,6 +16,7 @@ import {
 import { rutaMedio } from '../../dominio/medios'
 import { explicarMotivo } from '../../dominio/motivosRechazo'
 import { useSesion } from '../../sesion/contextoSesion'
+import { ContenidoArchivo } from './ContenidoArchivo'
 import './detalleCarga.css'
 
 const FILAS_POR_PAGINA = 20
@@ -404,6 +405,7 @@ export function PaginaDetalleCarga() {
         <>
           <Resumen carga={datos.carga} cargaVigente={datos.cargaVigente} />
           <Rechazos key={datos.carga.id_carga} carga={datos.carga} rechazos={datos.rechazos} />
+          <ContenidoArchivo carga={datos.carga} rechazos={datos.rechazos} />
         </>
       )}
     </div>

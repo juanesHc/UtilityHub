@@ -57,6 +57,25 @@ export class ErrorConexion extends ErrorApi {
   }
 }
 
+export class ErrorEnvioArchivo extends ErrorApi {
+  constructor(codigoHttp: number | null) {
+    super(mensajeDeEnvioFallido(codigoHttp), codigoHttp)
+  }
+}
+
+function mensajeDeEnvioFallido(codigoHttp: number | null): string {
+  if (codigoHttp === null) {
+    return 'No fue posible enviar el archivo al almacenamiento.'
+  }
+  if (codigoHttp === 403) {
+    return 'El permiso de subida venció o no es válido. Vuelve a intentarlo.'
+  }
+  if (codigoHttp === 413) {
+    return 'El archivo supera el tamaño máximo permitido.'
+  }
+  return 'El almacenamiento rechazó el archivo.'
+}
+
 export class ErrorServidor extends ErrorApi {
   constructor(codigoHttp: number) {
     super('El servidor respondió con un error inesperado.', codigoHttp)

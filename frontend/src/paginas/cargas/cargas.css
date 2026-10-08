@@ -121,6 +121,10 @@
   color: var(--text-2);
 }
 
+.cargas-seccion-subida {
+  padding: 0 var(--margen-lateral) 24px;
+}
+
 .cargas-seccion-filtros {
   padding: 0 var(--margen-lateral);
 }

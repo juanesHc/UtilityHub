@@ -1,11 +1,13 @@
 import os
 from dataclasses import dataclass, field
+from pathlib import Path
 
 from comun.excepciones import ConfiguracionIncompleta, ConfiguracionInvalida
 
 
 VARIABLE_CLAVE_FIRMA_TOKEN: str = "UTILITYHUB_JWT_CLAVE_FIRMA"
 VARIABLE_ORIGENES_CORS: str = "UTILITYHUB_CORS_ORIGENES"
+VARIABLE_CARPETA_ALMACEN_LOCAL: str = "UTILITYHUB_ALMACEN_LOCAL_CARPETA"
 LONGITUD_MINIMA_CLAVE_FIRMA: int = 32
 
 
@@ -13,6 +15,7 @@ LONGITUD_MINIMA_CLAVE_FIRMA: int = 32
 class ConfiguracionApi:
     clave_firma_token: str = field(repr=False)
     origenes_cors_permitidos: tuple[str, ...]
+    carpeta_almacen_local: Path | None
 
 
 def cargar_configuracion_api_desde_entorno() -> ConfiguracionApi:
@@ -33,7 +36,9 @@ def cargar_configuracion_api_desde_entorno() -> ConfiguracionApi:
         for origen in os.environ[VARIABLE_ORIGENES_CORS].split(",")
         if origen.strip()
     )
+    texto_carpeta_almacen_local = os.environ.get(VARIABLE_CARPETA_ALMACEN_LOCAL, "").strip()
     return ConfiguracionApi(
         clave_firma_token=clave_firma_token,
         origenes_cors_permitidos=origenes_cors_permitidos,
+        carpeta_almacen_local=Path(texto_carpeta_almacen_local) if texto_carpeta_almacen_local else None,
     )

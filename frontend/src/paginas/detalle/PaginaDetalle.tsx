@@ -241,15 +241,15 @@ function TarjetaCarga({ carga }: { carga: Carga }) {
   return (
     <section className="detalle-seccion detalle-seccion--carga" id="carga-origen">
       <p className="etiqueta-mono detalle-etiqueta-seccion">Carga de origen</p>
-      <Link to={`/cargas/${carga.id_carga}`} className="detalle-carga">
-        <span className="detalle-carga__texto">
-          <span className="detalle-carga__archivo">{carga.nombre_archivo}</span>
-          <span className="detalle-carga__resumen">
+      <Link to={`/cargas/${carga.id_carga}`} className="detalle-tarjeta-carga">
+        <span className="detalle-tarjeta-carga__texto">
+          <span className="detalle-tarjeta-carga__archivo">{carga.nombre_archivo}</span>
+          <span className="detalle-tarjeta-carga__resumen">
             {carga.nombre_torre} · procesada {formatearFechaDeProcesamiento(carga.fecha_procesamiento)} · {carga.filas_aceptadas}{' '}
             aceptadas, {carga.filas_rechazadas} rechazadas
           </span>
         </span>
-        <span className="detalle-carga__estado">
+        <span className="detalle-tarjeta-carga__estado">
           <PastillaEstadoCarga estado={carga.estado} conPunto={false} />
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C9CCCB" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M5 12h14M13 6l6 6-6 6" />

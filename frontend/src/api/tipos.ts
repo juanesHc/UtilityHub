@@ -131,6 +131,33 @@ export interface AdministradorListado {
   esta_bloqueado: boolean
 }
 
+export type EstadoSubida = 'pendiente' | 'procesada' | 'fallida'
+
+export interface SubidaAutorizada {
+  id_subida: number
+  clave_objeto: string
+  url_subida: string
+  metodo: 'PUT'
+  encabezados: Record<string, string>
+  expira_en: string
+}
+
+export interface Subida {
+  id_subida: number
+  nombre_archivo: string
+  estado: EstadoSubida
+  fecha_solicitud: string
+  id_carga: number | null
+  detalle_error: string | null
+  fecha_procesamiento: string | null
+}
+
+export interface ArchivoDeCarga {
+  nombre_archivo: string
+  url_descarga: string
+  expira_en: string
+}
+
 export interface ClienteApi {
   iniciarSesion(usuario: string, clave: string): Promise<TokenAcceso>
   consultarHistorico(filtros: FiltrosHistorico): Promise<PaginaHistorico>
@@ -141,4 +168,9 @@ export interface ClienteApi {
   listarServicios(): Promise<Servicio[]>
   registrarUsuario(usuario: string, clave: string): Promise<UsuarioRegistrado>
   listarAdministradores(): Promise<AdministradorListado[]>
+  solicitarSubida(nombreArchivo: string): Promise<SubidaAutorizada>
+  enviarArchivo(autorizacion: SubidaAutorizada, archivo: File): Promise<void>
+  consultarSubida(idSubida: number): Promise<Subida>
+  obtenerArchivoDeCarga(idCarga: number): Promise<ArchivoDeCarga>
+  descargarArchivo(archivo: ArchivoDeCarga): Promise<ArrayBuffer>
 }

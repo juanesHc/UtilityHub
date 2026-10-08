@@ -1,10 +1,14 @@
 from typing import Annotated, Any
+from urllib.parse import urlencode
 
-from fastapi import APIRouter, Depends, Path, Query, Request, status
+from fastapi import APIRouter, BackgroundTasks, Depends, Path, Query, Request, Response, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
+from api.almacen_local import TAMANO_MAXIMO_OBJETO_BYTES, AlmacenLocal
+from api.configuracion import VARIABLE_CARPETA_ALMACEN_LOCAL
 from api.esquemas import (
     AdministradorRespuesta,
+    ArchivoDeCargaRespuesta,
     CargaRespuesta,
     DetalleLecturaRespuesta,
     PATRON_TEXTO_SIN_CARACTER_NUL,
@@ -14,12 +18,16 @@ from api.esquemas import (
     ServicioRespuesta,
     SolicitudInicioSesion,
     SolicitudRegistroUsuario,
+    SolicitudSubidaArchivo,
+    SubidaAutorizadaRespuesta,
+    SubidaRespuesta,
     TokenAccesoRespuesta,
     TorreRespuesta,
     UsuarioRegistradoRespuesta,
 )
 from api.servicio_autenticacion import ServicioAutenticacion, UsuarioAutenticado
 from api.servicio_consulta import ServicioConsulta
+from api.servicio_subidas import ServicioSubidas
 from api.servicio_usuarios import ServicioUsuarios
 from api.traduccion import (
     convertir_administrador_en_respuesta,
@@ -29,12 +37,15 @@ from api.traduccion import (
     convertir_pagina_en_respuesta,
     convertir_rechazo_en_respuesta,
     convertir_servicio_en_respuesta,
+    convertir_subida_en_respuesta,
     convertir_token_en_respuesta,
     convertir_torre_en_respuesta,
     convertir_usuario_registrado_en_respuesta,
 )
-from comun.excepciones import TokenInvalido
+from comun.excepciones import AlmacenNoConfigurado, ArchivoDemasiadoGrande, TokenInvalido
 from comun.modelos import FiltrosHistoricoLecturas, Periodo, SolicitudPagina
+from comun.reloj import obtener_fecha_hora_actual_utc
+from procesamiento.receptor_archivos import ReceptorArchivosRecibidos
 
 
 PATRON_PERIODO_API: str = r"^[0-9]{4}-(0[1-9]|1[0-2])$"
@@ -66,6 +77,21 @@ def obtener_servicio_usuarios(peticion: Request) -> ServicioUsuarios:
     return peticion.app.state.servicio_usuarios
 
 
+def obtener_servicio_subidas(peticion: Request) -> ServicioSubidas:
+    return peticion.app.state.servicio_subidas
+
+
+def obtener_receptor_archivos(peticion: Request) -> ReceptorArchivosRecibidos:
+    return peticion.app.state.receptor_archivos
+
+
+def obtener_almacen_local(peticion: Request) -> AlmacenLocal:
+    almacen_local: AlmacenLocal | None = peticion.app.state.almacen_local
+    if almacen_local is None:
+        raise AlmacenNoConfigurado(VARIABLE_CARPETA_ALMACEN_LOCAL)
+    return almacen_local
+
+
 def exigir_usuario_autenticado(
     servicio_autenticacion: Annotated[ServicioAutenticacion, Depends(obtener_servicio_autenticacion)],
     credenciales: Annotated[HTTPAuthorizationCredentials | None, Depends(esquema_token_portador)],
@@ -82,6 +108,13 @@ router_consulta = APIRouter(
     responses=RESPUESTA_NO_AUTENTICADO,
 )
 router_usuarios = APIRouter(prefix="/api/usuarios", tags=["Usuarios"], responses=RESPUESTA_NO_AUTENTICADO)
+router_subidas = APIRouter(
+    prefix="/api/subidas",
+    tags=["Subidas"],
+    dependencies=[Depends(exigir_usuario_autenticado)],
+    responses=RESPUESTA_NO_AUTENTICADO,
+)
+router_almacen_local = APIRouter(prefix="/almacen-local", tags=["Almacén local (simula S3)"])
 
 
 @router_autenticacion.post(
@@ -191,6 +224,36 @@ def listar_rechazos_de_carga(
 
 
 @router_consulta.get(
+    "/cargas/{id_carga}/archivo",
+    tags=["Cargas"],
+    summary="URL de descarga del archivo original",
+    description=(
+        "Devuelve una URL firmada, válida por 5 minutos, para leer el CSV original tal como se subió. Es el mismo "
+        "contrato que una URL prefirmada de lectura de S3. Solo existe para las cargas que llegaron por subida; "
+        "las procesadas desde la línea de comandos responden 404."
+    ),
+    responses={
+        status.HTTP_404_NOT_FOUND: {"model": ErrorRespuesta, "description": "La carga no existe o no tiene archivo guardado"},
+        status.HTTP_503_SERVICE_UNAVAILABLE: {"model": ErrorRespuesta, "description": "El almacén de archivos no está configurado"},
+    },
+)
+def obtener_archivo_de_carga(
+    id_carga: Annotated[int, Path(ge=1)],
+    peticion: Request,
+    servicio_subidas: Annotated[ServicioSubidas, Depends(obtener_servicio_subidas)],
+    almacen_local: Annotated[AlmacenLocal, Depends(obtener_almacen_local)],
+) -> ArchivoDeCargaRespuesta:
+    descarga_autorizada = servicio_subidas.autorizar_descarga_de_carga(id_carga)
+    firma_de_descarga = almacen_local.firmar("GET", descarga_autorizada.clave_objeto, descarga_autorizada.fecha_expiracion)
+    url_objeto = str(peticion.url_for("entregar_objeto_local", clave_objeto=descarga_autorizada.clave_objeto))
+    return ArchivoDeCargaRespuesta(
+        nombre_archivo=descarga_autorizada.nombre_archivo,
+        url_descarga=url_objeto + "?" + urlencode({"expira": firma_de_descarga.expira, "firma": firma_de_descarga.firma}),
+        expira_en=descarga_autorizada.fecha_expiracion,
+    )
+
+
+@router_consulta.get(
     "/torres",
     tags=["Catálogos"],
     summary="Catálogo de torres",
@@ -250,3 +313,112 @@ def registrar_usuario(
 ) -> UsuarioRegistradoRespuesta:
     usuario_registrado = servicio_usuarios.registrar_usuario(solicitud.usuario, solicitud.clave, usuario_autenticado)
     return convertir_usuario_registrado_en_respuesta(usuario_registrado)
+
+
+@router_subidas.post(
+    "",
+    status_code=status.HTTP_201_CREATED,
+    summary="Solicitar una URL de subida",
+    description=(
+        "Registra la intención de subir un CSV y devuelve una URL firmada, válida por 5 minutos, a la que el "
+        "navegador envía el archivo con PUT. Es el mismo contrato que una URL prefirmada de S3. Antes de firmar "
+        "comprueba el nombre del archivo, que la torre exista y que el periodo sea admisible."
+    ),
+    responses={
+        status.HTTP_409_CONFLICT: {"model": ErrorRespuesta, "description": "El periodo es anterior al más reciente de la torre"},
+        CODIGO_HTTP_ENTIDAD_NO_PROCESABLE: {"model": ErrorRespuesta, "description": "Nombre de archivo o torre no válidos"},
+        status.HTTP_503_SERVICE_UNAVAILABLE: {"model": ErrorRespuesta, "description": "El almacén de archivos no está configurado"},
+    },
+)
+def solicitar_subida(
+    solicitud: SolicitudSubidaArchivo,
+    peticion: Request,
+    usuario_autenticado: Annotated[UsuarioAutenticado, Depends(exigir_usuario_autenticado)],
+    servicio_subidas: Annotated[ServicioSubidas, Depends(obtener_servicio_subidas)],
+    almacen_local: Annotated[AlmacenLocal, Depends(obtener_almacen_local)],
+) -> SubidaAutorizadaRespuesta:
+    subida_autorizada = servicio_subidas.solicitar_subida(solicitud.nombre_archivo, usuario_autenticado)
+    firma_de_subida = almacen_local.firmar("PUT", subida_autorizada.clave_objeto, subida_autorizada.fecha_expiracion)
+    url_objeto = str(peticion.url_for("recibir_objeto_local", clave_objeto=subida_autorizada.clave_objeto))
+    return SubidaAutorizadaRespuesta(
+        id_subida=subida_autorizada.id_subida,
+        clave_objeto=subida_autorizada.clave_objeto,
+        url_subida=url_objeto + "?" + urlencode({"expira": firma_de_subida.expira, "firma": firma_de_subida.firma}),
+        metodo="PUT",
+        encabezados={"Content-Type": "text/csv"},
+        expira_en=subida_autorizada.fecha_expiracion,
+    )
+
+
+@router_subidas.get(
+    "/{id_subida}",
+    summary="Estado de una subida",
+    description=(
+        "pendiente mientras el archivo no se ha procesado; procesada con el id_carga resultante; fallida con "
+        "detalle_error cuando el archivo no se pudo procesar."
+    ),
+    responses=RESPUESTA_NO_ENCONTRADO,
+)
+def consultar_subida(
+    id_subida: Annotated[int, Path(ge=1)],
+    servicio_subidas: Annotated[ServicioSubidas, Depends(obtener_servicio_subidas)],
+) -> SubidaRespuesta:
+    return convertir_subida_en_respuesta(servicio_subidas.consultar_subida(id_subida))
+
+
+@router_almacen_local.put(
+    "/{clave_objeto:path}",
+    name="recibir_objeto_local",
+    summary="Recibir un archivo con URL firmada",
+    description=(
+        "Sustituto local de S3 para desarrollo. No usa el token JWT: la autorización es la firma de la URL. "
+        "Guarda el archivo en la carpeta del almacén y, como lo haría la notificación de S3 a la Lambda, "
+        "lo procesa en segundo plano."
+    ),
+    responses={
+        status.HTTP_403_FORBIDDEN: {"model": ErrorRespuesta, "description": "Firma inválida o vencida"},
+        status.HTTP_413_CONTENT_TOO_LARGE: {"model": ErrorRespuesta, "description": "Archivo demasiado grande"},
+        status.HTTP_503_SERVICE_UNAVAILABLE: {"model": ErrorRespuesta, "description": "El almacén de archivos no está configurado"},
+    },
+)
+async def recibir_objeto_local(
+    clave_objeto: str,
+    peticion: Request,
+    tareas_en_segundo_plano: BackgroundTasks,
+    expira: Annotated[int, Query()],
+    firma: Annotated[str, Query(pattern=r"^[0-9a-f]{64}$")],
+    almacen_local: Annotated[AlmacenLocal, Depends(obtener_almacen_local)],
+    receptor_archivos: Annotated[ReceptorArchivosRecibidos, Depends(obtener_receptor_archivos)],
+) -> Response:
+    almacen_local.verificar_firma("PUT", clave_objeto, expira, firma, obtener_fecha_hora_actual_utc())
+    longitud_declarada = peticion.headers.get("content-length", "")
+    if longitud_declarada.isdigit() and int(longitud_declarada) > TAMANO_MAXIMO_OBJETO_BYTES:
+        raise ArchivoDemasiadoGrande(TAMANO_MAXIMO_OBJETO_BYTES)
+    contenido_objeto = await peticion.body()
+    if len(contenido_objeto) > TAMANO_MAXIMO_OBJETO_BYTES:
+        raise ArchivoDemasiadoGrande(TAMANO_MAXIMO_OBJETO_BYTES)
+    almacen_local.guardar_objeto(clave_objeto, contenido_objeto)
+    tareas_en_segundo_plano.add_task(receptor_archivos.recibir_objeto, clave_objeto, contenido_objeto)
+    return Response(status_code=status.HTTP_200_OK)
+
+
+@router_almacen_local.get(
+    "/{clave_objeto:path}",
+    name="entregar_objeto_local",
+    summary="Entregar un archivo con URL firmada",
+    description="Sustituto local de una URL prefirmada de lectura de S3. La autorización es la firma de la URL.",
+    response_class=Response,
+    responses={
+        status.HTTP_200_OK: {"content": {"text/csv": {}}, "description": "Contenido del archivo tal como se subió"},
+        status.HTTP_403_FORBIDDEN: {"model": ErrorRespuesta, "description": "Firma inválida o vencida"},
+        status.HTTP_404_NOT_FOUND: {"model": ErrorRespuesta, "description": "El objeto no existe"},
+    },
+)
+def entregar_objeto_local(
+    clave_objeto: str,
+    expira: Annotated[int, Query()],
+    firma: Annotated[str, Query(pattern=r"^[0-9a-f]{64}$")],
+    almacen_local: Annotated[AlmacenLocal, Depends(obtener_almacen_local)],
+) -> Response:
+    almacen_local.verificar_firma("GET", clave_objeto, expira, firma, obtener_fecha_hora_actual_utc())
+    return Response(content=almacen_local.leer_objeto(clave_objeto), media_type="text/csv")

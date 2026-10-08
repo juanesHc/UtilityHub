@@ -287,3 +287,21 @@ class UsuarioListado:
     nombre_usuario_creador: str | None
     ultimo_acceso: datetime | None
     bloqueado_hasta: datetime | None
+
+
+class EstadoSubida(Enum):
+    PENDIENTE = "pendiente"
+    PROCESADA = "procesada"
+    FALLIDA = "fallida"
+
+
+@dataclass(frozen=True)
+class SubidaRegistrada:
+    id_subida: int
+    clave_objeto: str
+    nombre_archivo: str
+    fecha_solicitud: datetime
+    estado: EstadoSubida
+    id_carga: int | None
+    detalle_error: str | None
+    fecha_procesamiento: datetime | None

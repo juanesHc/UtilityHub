@@ -1,20 +1,72 @@
+name: utilityhub
+
+x-conexion-base-datos: &conexion-base-datos
+  UTILITYHUB_DB_HOST: postgres
+  UTILITYHUB_DB_PUERTO: "5432"
+  UTILITYHUB_DB_USUARIO: ${UTILITYHUB_DB_USUARIO:-utilityhub}
+  UTILITYHUB_DB_CLAVE: ${UTILITYHUB_DB_CLAVE:-localdev}
+  UTILITYHUB_DB_NOMBRE: ${UTILITYHUB_DB_NOMBRE:-utilityhub}
+
 services:
   postgres:
     image: postgres:16
-    container_name: utilityhub-postgres
     environment:
-      POSTGRES_DB: utilityhub
-      POSTGRES_USER: utilityhub
-      POSTGRES_PASSWORD: localdev
+      POSTGRES_DB: ${UTILITYHUB_DB_NOMBRE:-utilityhub}
+      POSTGRES_USER: ${UTILITYHUB_DB_USUARIO:-utilityhub}
+      POSTGRES_PASSWORD: ${UTILITYHUB_DB_CLAVE:-localdev}
     ports:
-      - "5432:5432"
+      - "${UTILITYHUB_PUERTO_DB:-5432}:5432"
     volumes:
       - utilityhub-datos-postgres:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U utilityhub -d utilityhub"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
       timeout: 3s
       retries: 10
 
+  esquema:
+    image: postgres:16
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PGHOST: postgres
+      PGUSER: ${UTILITYHUB_DB_USUARIO:-utilityhub}
+      PGPASSWORD: ${UTILITYHUB_DB_CLAVE:-localdev}
+      PGDATABASE: ${UTILITYHUB_DB_NOMBRE:-utilityhub}
+      PGOPTIONS: -c client_min_messages=warning
+    volumes:
+      - ./backend/esquema.sql:/esquema.sql:ro
+    command: ["psql", "-q", "-v", "ON_ERROR_STOP=1", "-f", "/esquema.sql"]
+    restart: "no"
+
+  api:
+    build: ./backend
+    depends_on:
+      esquema:
+        condition: service_completed_successfully
+    environment:
+      <<: *conexion-base-datos
+      UTILITYHUB_ALMACEN_LOCAL_CARPETA: /almacen
+      UTILITYHUB_JWT_CLAVE_FIRMA: ${UTILITYHUB_JWT_CLAVE_FIRMA:-clave-de-firma-solo-para-desarrollo-local-utilityhub}
+      UTILITYHUB_CORS_ORIGENES: http://localhost:${UTILITYHUB_PUERTO_WEB:-5173},http://127.0.0.1:${UTILITYHUB_PUERTO_WEB:-5173}
+    volumes:
+      - utilityhub-almacen:/almacen
+    ports:
+      - "${UTILITYHUB_PUERTO_API:-8000}:8000"
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: http://localhost:${UTILITYHUB_PUERTO_API:-8000}
+    depends_on:
+      - api
+    ports:
+      - "${UTILITYHUB_PUERTO_WEB:-5173}:80"
+    restart: unless-stopped
+
 volumes:
   utilityhub-datos-postgres:
+  utilityhub-almacen:

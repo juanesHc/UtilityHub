@@ -135,3 +135,37 @@ class UsuarioInexistente(ErrorUtilityHub):
     def __init__(self, nombre_usuario: str) -> None:
         super().__init__(f"El usuario '{nombre_usuario}' no existe")
         self.nombre_usuario: str = nombre_usuario
+
+
+class SubidaInexistente(ErrorUtilityHub):
+    def __init__(self, id_subida: int) -> None:
+        super().__init__(f"La subida {id_subida} no existe")
+        self.id_subida: int = id_subida
+
+
+class AlmacenNoConfigurado(ErrorUtilityHub):
+    def __init__(self, nombre_variable: str) -> None:
+        super().__init__(f"La subida de archivos no está configurada; falta la variable de entorno {nombre_variable}")
+        self.nombre_variable: str = nombre_variable
+
+
+class FirmaDeSubidaInvalida(ErrorUtilityHub):
+    def __init__(self) -> None:
+        super().__init__("La URL de subida no es válida o ya venció; solicite una nueva")
+
+
+class ArchivoDemasiadoGrande(ErrorUtilityHub):
+    def __init__(self, tamano_maximo_bytes: int) -> None:
+        super().__init__(f"El archivo supera el tamaño máximo de {tamano_maximo_bytes // (1024 * 1024)} MB")
+        self.tamano_maximo_bytes: int = tamano_maximo_bytes
+
+class ArchivoDeCargaNoDisponible(ErrorUtilityHub):
+    def __init__(self, id_carga: int) -> None:
+        super().__init__(f"La carga {id_carga} no tiene un archivo guardado en el almacén")
+        self.id_carga: int = id_carga
+
+
+class ObjetoInexistente(ErrorUtilityHub):
+    def __init__(self, clave_objeto: str) -> None:
+        super().__init__(f"El objeto '{clave_objeto}' no existe en el almacén")
+        self.clave_objeto: str = clave_objeto

@@ -3,6 +3,7 @@ import {
   ErrorConflicto,
   ErrorCredencialesInvalidas,
   ErrorCuentaBloqueada,
+  ErrorEnvioArchivo,
   ErrorRecursoInexistente,
   ErrorServidor,
   ErrorSesionVencida,
@@ -10,6 +11,7 @@ import {
 } from './errores'
 import type {
   AdministradorListado,
+  ArchivoDeCarga,
   Carga,
   ClienteApi,
   DetalleLectura,
@@ -17,6 +19,8 @@ import type {
   PaginaHistorico,
   Rechazo,
   Servicio,
+  Subida,
+  SubidaAutorizada,
   TokenAcceso,
   Torre,
   UsuarioRegistrado,
@@ -78,6 +82,47 @@ export class ClienteHttp implements ClienteApi {
 
   listarAdministradores(): Promise<AdministradorListado[]> {
     return this.pedir<AdministradorListado[]>('/api/usuarios')
+  }
+
+  solicitarSubida(nombreArchivo: string): Promise<SubidaAutorizada> {
+    return this.pedir<SubidaAutorizada>('/api/subidas', { metodo: 'POST', cuerpo: { nombre_archivo: nombreArchivo } })
+  }
+
+  async enviarArchivo(autorizacion: SubidaAutorizada, archivo: File): Promise<void> {
+    let respuesta: Response
+    try {
+      respuesta = await fetch(autorizacion.url_subida, {
+        method: autorizacion.metodo,
+        headers: autorizacion.encabezados,
+        body: archivo,
+      })
+    } catch {
+      throw new ErrorEnvioArchivo(null)
+    }
+    if (!respuesta.ok) {
+      throw new ErrorEnvioArchivo(respuesta.status)
+    }
+  }
+
+  consultarSubida(idSubida: number): Promise<Subida> {
+    return this.pedir<Subida>(`/api/subidas/${idSubida}`)
+  }
+
+  obtenerArchivoDeCarga(idCarga: number): Promise<ArchivoDeCarga> {
+    return this.pedir<ArchivoDeCarga>(`/api/cargas/${idCarga}/archivo`)
+  }
+
+  async descargarArchivo(archivo: ArchivoDeCarga): Promise<ArrayBuffer> {
+    let respuesta: Response
+    try {
+      respuesta = await fetch(archivo.url_descarga)
+    } catch {
+      throw new ErrorConexion()
+    }
+    if (!respuesta.ok) {
+      throw new ErrorServidor(respuesta.status)
+    }
+    return respuesta.arrayBuffer()
   }
 
   private async pedir<Respuesta>(ruta: string, opciones: OpcionesPeticion = {}): Promise<Respuesta> {

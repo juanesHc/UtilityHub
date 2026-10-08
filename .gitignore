@@ -27,6 +27,7 @@ rootkey.csv
 # quita la exclusion de casos_esperados.csv y comitea ese archivo solo.
 tools/generador-datos/salida/
 salida/
+almacen-local/
 *.csv
 !docs/**/*.csv
 

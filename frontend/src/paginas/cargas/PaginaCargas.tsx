@@ -23,6 +23,7 @@ import {
   tieneProblemas,
   type FiltrosCargas,
 } from './filtrosCargas'
+import { SubidaArchivo } from './SubidaArchivo'
 import './cargas.css'
 
 type EstadoDatos = { tipo: 'cargando' } | { tipo: 'listo'; cargas: Carga[]; torres: Torre[] } | { tipo: 'error' }
@@ -158,6 +159,10 @@ export function PaginaCargas() {
             </div>
           )}
         </div>
+      </section>
+
+      <section className="cargas-seccion-subida">
+        <SubidaArchivo torres={torres} onCargaRegistrada={() => establecerIntento((actual) => actual + 1)} />
       </section>
 
       <section className="cargas-seccion-filtros">

@@ -94,6 +94,22 @@ ALTER TABLE usuario ADD COLUMN IF NOT EXISTS fecha_creacion TIMESTAMP NULL;
 ALTER TABLE usuario ADD COLUMN IF NOT EXISTS creado_por_id_usuario INT NULL
     CONSTRAINT fk_usuario_creado_por REFERENCES usuario (id_usuario);
 
+CREATE TABLE IF NOT EXISTS subida (
+    id_subida INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    clave_objeto VARCHAR(512) NOT NULL,
+    nombre_archivo VARCHAR(255) NOT NULL,
+    id_usuario INT NOT NULL,
+    fecha_solicitud TIMESTAMP NOT NULL,
+    estado VARCHAR(20) NOT NULL DEFAULT 'pendiente',
+    id_carga INT NULL,
+    detalle_error VARCHAR(1000) NULL,
+    fecha_procesamiento TIMESTAMP NULL,
+    CONSTRAINT uq_subida_clave_objeto UNIQUE (clave_objeto),
+    CONSTRAINT fk_subida_usuario FOREIGN KEY (id_usuario) REFERENCES usuario (id_usuario),
+    CONSTRAINT fk_subida_carga FOREIGN KEY (id_carga) REFERENCES carga (id_carga),
+    CONSTRAINT ck_subida_estado CHECK (estado IN ('pendiente', 'procesada', 'fallida'))
+);
+
 INSERT INTO servicio (codigo, nombre, unidad_medida, umbral_desviacion) VALUES
     ('AGUA', 'Agua potable', 'm3', 0.50),
     ('ENERGIA', 'Energia electrica', 'kWh', 0.50)

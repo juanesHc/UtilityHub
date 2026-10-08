@@ -6,6 +6,7 @@ from comun.modelos import (
     Apartamento,
     CargaRegistrada,
     EstadoCarga,
+    EstadoSubida,
     FilaRechazada,
     FiltrosHistoricoLecturas,
     LecturaConsultada,
@@ -17,6 +18,7 @@ from comun.modelos import (
     ResumenCarga,
     Servicio,
     SolicitudPagina,
+    SubidaRegistrada,
     Torre,
     Usuario,
     UsuarioListado,
@@ -435,3 +437,69 @@ def listar_usuarios(cursor: Cursor) -> tuple[UsuarioListado, ...]:
         )
         for fila in cursor.fetchall()
     )
+
+
+def buscar_torre_por_codigo(cursor: Cursor, codigo_torre: str) -> Torre | None:
+    cursor.execute("SELECT id_torre, codigo, nombre FROM torre WHERE codigo = UPPER(%s)", (codigo_torre,))
+    fila_torre = cursor.fetchone()
+    return None if fila_torre is None else convertir_fila_en_torre(fila_torre)
+
+
+SELECCION_SUBIDA: str = (
+    "SELECT id_subida, clave_objeto, nombre_archivo, fecha_solicitud, estado, id_carga, "
+    "detalle_error, fecha_procesamiento FROM subida"
+)
+
+
+def insertar_subida(
+    cursor: Cursor,
+    clave_objeto: str,
+    nombre_archivo: str,
+    id_usuario: int,
+    fecha_solicitud: datetime,
+) -> int:
+    cursor.execute(
+        "INSERT INTO subida (clave_objeto, nombre_archivo, id_usuario, fecha_solicitud, estado) "
+        "VALUES (%s, %s, %s, %s, %s) RETURNING id_subida",
+        (clave_objeto, nombre_archivo, id_usuario, fecha_solicitud, EstadoSubida.PENDIENTE.value),
+    )
+    return cursor.fetchone()["id_subida"]
+
+
+def buscar_subida_por_id(cursor: Cursor, id_subida: int) -> SubidaRegistrada | None:
+    cursor.execute(SELECCION_SUBIDA + " WHERE id_subida = %s", (id_subida,))
+    fila_subida = cursor.fetchone()
+    return None if fila_subida is None else convertir_fila_en_subida(fila_subida)
+
+
+def convertir_fila_en_subida(fila_subida: dict[str, Any]) -> SubidaRegistrada:
+    return SubidaRegistrada(
+        id_subida=fila_subida["id_subida"],
+        clave_objeto=fila_subida["clave_objeto"],
+        nombre_archivo=fila_subida["nombre_archivo"],
+        fecha_solicitud=fila_subida["fecha_solicitud"],
+        estado=EstadoSubida(fila_subida["estado"]),
+        id_carga=fila_subida["id_carga"],
+        detalle_error=fila_subida["detalle_error"],
+        fecha_procesamiento=fila_subida["fecha_procesamiento"],
+    )
+
+
+def registrar_resultado_de_subida(
+    cursor: Cursor,
+    clave_objeto: str,
+    estado_subida: EstadoSubida,
+    id_carga: int | None,
+    detalle_error: str | None,
+    fecha_procesamiento: datetime,
+) -> None:
+    cursor.execute(
+        "UPDATE subida SET estado = %s, id_carga = %s, detalle_error = %s, fecha_procesamiento = %s "
+        "WHERE clave_objeto = %s",
+        (estado_subida.value, id_carga, detalle_error, fecha_procesamiento, clave_objeto),
+    )
+
+def buscar_subida_por_id_carga(cursor: Cursor, id_carga: int) -> SubidaRegistrada | None:
+    cursor.execute(SELECCION_SUBIDA + " WHERE id_carga = %s ORDER BY id_subida DESC LIMIT 1", (id_carga,))
+    fila_subida = cursor.fetchone()
+    return None if fila_subida is None else convertir_fila_en_subida(fila_subida)

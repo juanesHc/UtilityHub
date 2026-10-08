@@ -133,3 +133,32 @@ class ServicioRespuesta(BaseModel):
     nombre: str
     unidad_medida: str
     umbral_desviacion: DecimalComoNumero
+
+
+class SolicitudSubidaArchivo(BaseModel):
+    nombre_archivo: str = Field(min_length=1, max_length=255, pattern=PATRON_TEXTO_SIN_CARACTER_NUL)
+
+
+class SubidaAutorizadaRespuesta(BaseModel):
+    id_subida: int
+    clave_objeto: str
+    url_subida: str
+    metodo: Literal["PUT"]
+    encabezados: dict[str, str]
+    expira_en: FechaHoraUtc
+
+
+class ArchivoDeCargaRespuesta(BaseModel):
+    nombre_archivo: str
+    url_descarga: str
+    expira_en: FechaHoraUtc
+
+
+class SubidaRespuesta(BaseModel):
+    id_subida: int
+    nombre_archivo: str
+    estado: Literal["pendiente", "procesada", "fallida"]
+    fecha_solicitud: FechaHoraUtc
+    id_carga: int | None
+    detalle_error: str | None
+    fecha_procesamiento: FechaHoraUtc | None
