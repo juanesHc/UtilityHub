@@ -12,5 +12,6 @@ RUN test -n "$VITE_API_URL" && npm run build
 FROM nginx:1.29-alpine
 
 COPY --from=construccion /app/dist /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80

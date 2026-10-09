@@ -1,0 +1,25 @@
+name: utilityhub
+
+services:
+  api:
+    build: ./backend
+    env_file: .env
+    environment:
+      UTILITYHUB_ALMACEN_LOCAL_CARPETA: /almacen
+    volumes:
+      - utilityhub-almacen:/almacen
+    restart: unless-stopped
+
+  web:
+    build:
+      context: ./frontend
+      args:
+        VITE_API_URL: /
+    depends_on:
+      - api
+    ports:
+      - "80:80"
+    restart: unless-stopped
+
+volumes:
+  utilityhub-almacen:

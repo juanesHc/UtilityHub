@@ -18,6 +18,7 @@ def abrir_conexion(configuracion: ConfiguracionBaseDatos) -> Conexion:
             user=configuracion.usuario,
             password=configuracion.clave,
             dbname=configuracion.nombre_base_datos,
+            sslmode=configuracion.modo_ssl,
             client_encoding="UTF8",
             cursor_factory=RealDictCursor,
         )
